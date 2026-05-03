@@ -1,0 +1,79 @@
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
+
+#include <string_view>
+#include <tuple>
+
+class SourcePosition {
+
+    size_t src_byte;
+    size_t src_x;
+    size_t src_y;
+
+public:
+    SourcePosition(size_t byte, size_t x, size_t y) :
+        src_byte { byte },
+        src_x { x },
+        src_y { y } { }
+
+    SourcePosition(const SourcePosition& other) = default;
+
+    size_t x() const;
+    size_t y() const;
+
+    size_t line() const;
+    size_t col() const;
+
+    size_t byte() const;
+};
+
+namespace std {
+    template<>
+    struct tuple_element<0, SourcePosition> {
+        using type = size_t;
+    };
+
+    template<>
+    struct tuple_element<1, SourcePosition> {
+        using type = size_t;
+    };
+
+    template<>
+    struct tuple_size<SourcePosition> {
+        size_t value = 2;
+    };
+
+    template<size_t idx>
+    size_t get(const SourcePosition& sp) {
+        if constexpr (idx == 0) {
+            return sp.x();
+        } else if constexpr (idx == 1) {
+            return sp.y();
+        } else {
+            static_assert(idx < 2, "Index must be <2");
+        }
+    }
+
+}
+
+
+class Token {
+
+    std::string_view tok;
+    SourcePosition src;
+
+public:
+
+    Token(std::string_view token, SourcePosition source) :
+        tok { token },
+        src { source } { }
+
+    Token(const Token& other) = default;
+
+
+    std::string_view token() const { return tok; }
+    SourcePosition source() const { return src; }
+
+};
+
+#endif  // TOKEN_HPP
