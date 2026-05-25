@@ -1,6 +1,5 @@
 #include "files.hpp"
 
-#include <memory>
 #include <mutex>
 #include <fstream>
 #include <sstream>
@@ -23,8 +22,8 @@ namespace {
     std::string read_file(std::ifstream& is) {
         std::stringstream ss{};
 
-        auto ssize = is.tellg();
-        auto usize = static_cast<size_t>(ssize);
+        const auto ssize = is.tellg();
+        const auto usize = static_cast<size_t>(ssize);
 
         std::string contents(usize, '\0');
 
@@ -47,11 +46,11 @@ namespace {
 }
 
 
-const File& Files::load_file(std::string_view file) {
+const File& Files::load_file(std::string filename) {
 
-    std::string contents = read_file_contents(file);
+    File file { filename, read_file_contents(filename) };
 
-    auto result = files.emplace(file, File{file, std::move(contents)});
+    const auto result = files.emplace(std::move(filename), std::move(file));
 
     if (not result.second) {
         throw std::runtime_error { "Failed to store loaded file" };
@@ -59,15 +58,15 @@ const File& Files::load_file(std::string_view file) {
     return result.first->second;
 }
 
-const File& Files::get(std::string_view file) {
+
+const File& Files::get(std::string file) {
     std::lock_guard lock { mutex };
 
-    std::string filename { file };
-    auto it = files.find(filename);
+    const auto it = files.find(file);
 
     if (it != files.end()) {
         return it->second;
     }
 
-    return load_file(std::move(filename));
+    return load_file(std::move(file));
 }

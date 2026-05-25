@@ -18,13 +18,13 @@ public:
 
     SourcePosition(const SourcePosition& other) = default;
 
-    size_t x() const;
-    size_t y() const;
+    size_t x() const { return src_x; }
+    size_t y() const { return src_y; };
 
-    size_t line() const;
-    size_t col() const;
+    size_t line() const { return src_y; };
+    size_t col() const { return src_x; };
 
-    size_t byte() const;
+    size_t byte() const { return src_byte; };
 };
 
 namespace std {

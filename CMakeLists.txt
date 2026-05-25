@@ -15,4 +15,6 @@ include_directories(
 add_executable(
     main
     src/main.cpp
+    src/tokenizer.cpp
+    src/files.cpp
 )

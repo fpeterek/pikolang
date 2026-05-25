@@ -33,11 +33,11 @@ class Files {
     std::mutex mutex{};
     std::unordered_map<std::string, File> files;
 
-    const File& load_file(std::string_view file);
+    const File& load_file(std::string filename);
 
 public:
 
-    const File& get(std::string_view file);
+    const File& get(std::string file);
 
 };
 
