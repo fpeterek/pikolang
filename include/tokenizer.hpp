@@ -60,9 +60,15 @@ class Tokenizer {
         }
         { }
 
+    iterator previous_iter();
     iterator current_iter();
+    iterator next_iter();
 
-    Token consume_current_token();
+    char previous_character();
+    char current_character();
+    char next_character();
+
+    Token consume_current_token(TokenType type);
 
     Tokenized tokenize();
 
@@ -72,6 +78,11 @@ class Tokenizer {
 
     void advance_state(State& state);
 
+    // Helpers
+    std::optional<Token> get_integer();
+    std::optional<Token> get_float();
+
+    // Token Parsers
     std::optional<Token> get_id();
     std::optional<Token> get_quoted_id();
     std::optional<Token> get_operator();

@@ -1,0 +1,15 @@
+import stdlib
+
+
+fn main(args: Array[String]) -> Void {
+    let integer: Int = 25
+    let float: Float = 3.1415
+    let base16: Int = 16#AEF123
+    let exp: Float = 31415e10
+    var char: Char = 'a'
+    var newline: Char = '\n'
+    var quote: Char = '\''
+    var str: String = "ab\ncd\"ef"
+
+    std::println("abcd")
+}

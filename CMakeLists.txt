@@ -17,4 +17,5 @@ add_executable(
     src/main.cpp
     src/tokenizer.cpp
     src/files.cpp
+    src/print_tokens.cpp
 )

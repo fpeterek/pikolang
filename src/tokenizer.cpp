@@ -75,12 +75,28 @@ bool is_newline(const char c) {
     return c == '\n';
 }
 
-bool is_number_begin(const char c) {
-    return std::isdigit(c) or c == '.';
+bool is_integer_begin(const char c) {
+    return std::isdigit(c);
 }
 
-bool is_number_char(const char c) {
-    return is_number_begin(c) or std::isalpha(c) or c == '#' or c == '_';
+bool is_float_begin(const char c) {
+    return is_integer_begin(c) or c == '.';
+}
+
+bool is_integer_char(const char c) {
+    return is_integer_begin(c) or std::isalpha(c) or c == '#' or c == '_';
+}
+
+bool is_float_char(const char c) {
+    return is_float_begin(c) or c == 'e' or c == '_';
+}
+
+bool is_dec_like(const char c) {
+    return std::isdigit(c) or c == '_';
+}
+
+bool is_num_like(const char c) {
+    return std::isalnum(c) or c == '_';
 }
 
 bool is_member_access_char(const char c) {
@@ -93,11 +109,29 @@ bool is_type_decl_char(const char c) {
 
 }
 
+Tokenizer::iterator Tokenizer::previous_iter() {
+    return current.iter - 1;
+}
 
 Tokenizer::iterator Tokenizer::current_iter() {
     return current.iter;
 }
 
+Tokenizer::iterator Tokenizer::next_iter() {
+    return current.iter + 1;
+}
+
+char Tokenizer::previous_character() {
+    return *previous_iter();
+}
+
+char Tokenizer::current_character() {
+    return *current_iter();
+}
+
+char Tokenizer::next_character() {
+    return *next_iter();
+}
 
 void Tokenizer::advance_state(State& state) {
     if (*(state.iter) == '\n') {
@@ -112,10 +146,11 @@ void Tokenizer::advance_state(State& state) {
 }
 
 
-Token Tokenizer::consume_current_token() {
+Token Tokenizer::consume_current_token(TokenType type) {
     Token tok {
         std::string_view { token_start.iter, current.iter },
-        SourcePosition { current.pos.byte, current.pos.x, current.pos.y }
+        SourcePosition { current.pos.byte, current.pos.x, current.pos.y },
+        type
     };
 
     token_start = current;
@@ -126,138 +161,211 @@ Token Tokenizer::consume_current_token() {
 
 std::optional<Token> Tokenizer::get_id() {
 
-    if (not is_id_begin(*current_iter())) {
+    if (not is_id_begin(current_character())) {
         return std::nullopt;
     }
 
-    while (has_char() and is_id_char(*current_iter())) {
+    while (has_char() and is_id_char(current_character())) {
         advance_state(current);
     }
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Id);
 }
 
 
 std::optional<Token> Tokenizer::get_quoted_id() {
 
-    if (not is_id_quote(*current_iter())) {
+    if (not is_id_quote(current_character())) {
         return std::nullopt;
     }
 
     do {
         advance_state(current);
-    } while (has_char() and not is_id_quote(*current_iter()));
+    } while (has_char() and not is_id_quote(current_character()));
 
     if (has_char()) {
         advance_state(current);
     }
 
-    return consume_current_token();
+    return consume_current_token(TokenType::QuotedId);
 }
 
 
 std::optional<Token> Tokenizer::get_operator() {
     
-    if (not is_operator_char(*current_iter())) {
+    if (not is_operator_char(current_character())) {
         return std::nullopt;
     }
 
-    while (has_char() and is_operator_char(*current_iter())) {
+    while (has_char() and is_operator_char(current_character())) {
         advance_state(current);
     }
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Operator);
 }
 
 
 std::optional<Token> Tokenizer::get_quote() {
 
-    if (not is_quote(*current_iter())) {
+    if (not is_quote(current_character())) {
         return std::nullopt;
     }
 
-    char quote = *current_iter();
+    const char quote = current_character();
+    advance_state(current);
+
+    bool is_escaped = false;
 
     // TODO: Escape sequences
-    while (has_char() and *current_iter() != quote) {
+    while (has_char()) {
+
+        const char current_char = current_character();
         advance_state(current);
+
+        if (current_char == '\\' and not is_escaped) {
+            is_escaped = true;
+        }
+        else if (current_char == quote and not is_escaped) {
+            break;
+        }
+        else {
+            is_escaped = false;
+        }
+
     }
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Quote);
 }
 
 
 std::optional<Token> Tokenizer::get_brace() {
 
-    if (not is_brace(*current_iter())) {
+    if (not is_brace(current_character())) {
         return std::nullopt;
     }
 
     advance_state(current);
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Brace);
 }
 
 
 std::optional<Token> Tokenizer::get_sep() {
 
-    if (not is_sep(*current_iter())) {
+    if (not is_sep(current_character())) {
         return std::nullopt;
     }
 
     advance_state(current);
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Sep);
 }
 
 
 std::optional<Token> Tokenizer::get_newline() {
 
-    if (not is_newline(*current_iter())) {
+    if (not is_newline(current_character())) {
         return std::nullopt;
     }
 
     advance_state(current);
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Newline);
 }
 
 
 std::optional<Token> Tokenizer::get_space() {
 
-    if (not is_space(*current_iter())) {
+    if (not is_space(current_character())) {
         return std::nullopt;
     }
 
-    while (has_char() and is_space(*current_iter())) {
+    while (has_char() and is_space(current_character())) {
         advance_state(current);
     }
 
-    return consume_current_token();
+    return consume_current_token(TokenType::Space);
 }
 
 
+std::optional<Token> Tokenizer::get_integer() {
+
+    if (not is_integer_begin(current_character())) {
+        return std::nullopt;
+    }
+
+
+    while (has_char() and is_num_like(current_character())) {
+        advance_state(current);
+    }
+
+    return consume_current_token(TokenType::Integer);
+}
+
+std::optional<Token> Tokenizer::get_float() {
+    const char previous = previous_character();
+
+    bool accept_e = previous != 'e';
+
+    while (has_char()) {
+        advance_state(current);
+
+        if (accept_e and current_character() == 'e') {
+            accept_e = false;
+        }
+        else if (not is_dec_like(current_character())) {
+            break;
+        }
+    }
+
+    return consume_current_token(TokenType::Float);
+}
+
 std::optional<Token> Tokenizer::get_number() {
-    // TODO: Implement
-    return std::nullopt;
+
+    if (not is_integer_begin(current_character()) and not is_float_begin(current_character())) {
+        return std::nullopt;
+    }
+
+    // TODO: Negative numbers, negative exponents
+    while (has_char()) {
+
+        const char current_char = current_character();
+        advance_state(current);
+
+        if (current_char == '#') {
+            return get_integer();
+        }
+
+        if (current_char == '.' or current_char == 'e') {
+            return get_float();
+        }
+
+        if (not is_dec_like(current_char)) {
+            break;
+        }
+    }
+
+
+    return consume_current_token(TokenType::Integer);
 }
 
 
 std::optional<Token> Tokenizer::get_member_access() {
 
-    if (not is_member_access_char(*current_iter())) {
+    if (not is_member_access_char(current_character())) {
         return std::nullopt;
     }
 
     advance_state(current);
 
     if (*(token_start.iter) == '.') {
-        return consume_current_token();
+        return consume_current_token(TokenType::MemberAccess);
     }
 
-    if (has_char() and *current_iter() == ':') {
+    if (has_char() and current_character() == ':') {
         advance_state(current);
-        return consume_current_token();
+        return consume_current_token(TokenType::MemberAccess);
     }
 
     return std::nullopt;
@@ -266,18 +374,18 @@ std::optional<Token> Tokenizer::get_member_access() {
 
 std::optional<Token> Tokenizer::get_type_decl() {
 
-    if (not is_type_decl_char(*current_iter())) {
+    if (not is_type_decl_char(current_character())) {
         return std::nullopt;
     }
 
     advance_state(current);
-    return consume_current_token();
+    return consume_current_token(TokenType::TypeDecl);
 }
 
 
 std::optional<Token> Tokenizer::get_invalid() {
     advance_state(current);
-    return consume_current_token();
+    return consume_current_token(TokenType::Invalid);
 }
 
 
@@ -296,7 +404,6 @@ Token Tokenizer::get_next() {
             return *resp;
         }
     }
-
 
     throw std::runtime_error("Unreachable");
 }

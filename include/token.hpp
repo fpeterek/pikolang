@@ -57,22 +57,42 @@ namespace std {
 }
 
 
+enum struct TokenType {
+    Id,
+    QuotedId,
+    Operator,
+    Quote,
+    Brace,
+    Sep,
+    Newline,
+    Space,
+    Integer,
+    Float,
+    MemberAccess,
+    TypeDecl,
+    Invalid,
+};
+
+
 class Token {
 
     std::string_view tok;
     SourcePosition src;
+    TokenType tok_type;
 
 public:
 
-    Token(std::string_view token, SourcePosition source) :
+    Token(std::string_view token, SourcePosition source, TokenType type) :
         tok { token },
-        src { source } { }
+        src { source },
+        tok_type { type } { }
 
     Token(const Token& other) = default;
 
 
     std::string_view token() const { return tok; }
     SourcePosition source() const { return src; }
+    TokenType type() const { return tok_type; }
 
 };
 
