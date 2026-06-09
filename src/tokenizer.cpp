@@ -5,7 +5,9 @@
 #include <cctype>
 #include <array>
 #include <optional>
+#include <print>
 #include <stdexcept>
+#include <utility>
 
 
 namespace {
@@ -181,11 +183,13 @@ std::optional<Token> Tokenizer::get_quoted_id() {
 
     do {
         advance_state(current);
-    } while (has_char() and not is_id_quote(current_character()));
+    } while (has_char() and not is_newline(current_character()) and not is_id_quote(current_character()));
 
-    if (has_char()) {
-        advance_state(current);
+    if (not is_id_quote(current_character())) {
+        return std::nullopt;
     }
+
+    advance_state(current);
 
     return consume_current_token(TokenType::QuotedId);
 }
@@ -405,7 +409,7 @@ Token Tokenizer::get_next() {
         }
     }
 
-    throw std::runtime_error("Unreachable");
+    std::unreachable();
 }
 
 

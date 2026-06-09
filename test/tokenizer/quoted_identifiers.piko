@@ -1,0 +1,6 @@
+`identifier 1`    `quoted ident`
+   `  indented with   spaces  `
+   ` $special "characters" ()`
+
+   `broken up identifiers
+   should yield invalid`

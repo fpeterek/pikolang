@@ -25,11 +25,13 @@ namespace {
         const auto ssize = is.tellg();
         const auto usize = static_cast<size_t>(ssize);
 
+        is.seekg(0);
+
         std::string contents(usize, '\0');
 
         is.read(&contents[0], ssize);
 
-        if (not is) {
+        if (not is and not is.eof()) {
             throw std::runtime_error { "Failed to read file" };
         }
 

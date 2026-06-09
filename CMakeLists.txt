@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(test)
+project(pikolang)
 
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -pedantic")
@@ -13,7 +13,7 @@ include_directories(
 
 
 add_executable(
-    main
+    pikoc
     src/main.cpp
     src/tokenizer.cpp
     src/files.cpp

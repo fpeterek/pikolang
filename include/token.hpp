@@ -3,6 +3,7 @@
 
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 class SourcePosition {
 
@@ -72,6 +73,25 @@ enum struct TokenType {
     TypeDecl,
     Invalid,
 };
+
+inline std::string_view str(TokenType type) {
+    switch (type) {
+        case TokenType::Id:           return "Id";
+        case TokenType::QuotedId:     return "QuotedId";
+        case TokenType::Operator:     return "Operator";
+        case TokenType::Quote:        return "Quote";
+        case TokenType::Brace:        return "Brace";
+        case TokenType::Sep:          return "Sep";
+        case TokenType::Newline:      return "Newline";
+        case TokenType::Space:        return "Space";
+        case TokenType::Integer:      return "Integer";
+        case TokenType::Float:        return "Float";
+        case TokenType::MemberAccess: return "MemberAccess";
+        case TokenType::TypeDecl:     return "TypeDecl";
+        case TokenType::Invalid:      return "Invalid";
+    }
+    std::unreachable();
+}
 
 
 class Token {

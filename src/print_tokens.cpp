@@ -49,6 +49,8 @@ class Printer {
     void print_type_decl(const Token& tok);
     void print_invalid(const Token& tok);
 
+    void print_token(const Token& tok);
+
     void print_impl(const std::vector<Token>& tokens);
 
     Printer() noexcept = default;
@@ -67,14 +69,14 @@ void Printer::print_offset() {
     }
 
     for (size_t i = 0; i < nesting; ++i) {
-        std::print("    ");
+        std::print("····");
     }
 
     is_on_new_line = false;
 }
 
 void Printer::basic_print_no_offset(colors::Color color, std::string_view string) {
-    std::println("{}{}", color, string);
+    std::print("{}{}", color, string);
 }
 
 void Printer::basic_print(colors::Color color, std::string_view string) {
@@ -123,7 +125,7 @@ void Printer::print_sep([[maybe_unused]] const Token& tok) {
 }
 
 void Printer::print_newline([[maybe_unused]] const Token& tok) {
-    basic_print(colors::whitespace, "\\n");
+    basic_print(colors::whitespace, "\\n\n");
     is_on_new_line = true;
 }
 
@@ -156,25 +158,34 @@ void Printer::print_invalid(const Token& tok) {
     basic_print(colors::invalid, tok);
 }
 
+void Printer::print_token(const Token& tok) {
+    switch (tok.type()) {
+        case TokenType::Id:           return print_id(tok);
+        case TokenType::QuotedId:     return print_quoted_id(tok);
+        case TokenType::Operator:     return print_operator(tok);
+        case TokenType::Quote:        return print_quote(tok);
+        case TokenType::Brace:        return print_brace(tok);
+        case TokenType::Sep:          return print_sep(tok);
+        case TokenType::Newline:      return print_newline(tok);
+        case TokenType::Space:        return print_space(tok);
+        case TokenType::Integer:      return print_integer(tok);
+        case TokenType::Float:        return print_float(tok);
+        case TokenType::MemberAccess: return print_member_access(tok);
+        case TokenType::TypeDecl:     return print_type_decl(tok);
+        case TokenType::Invalid:      return print_invalid(tok);
+    }
+}
 
 void Printer::print_impl(const std::vector<Token>& tokens) {
 
+    std::println("Number of tokens: {}", tokens.size());
+
+    // for (const Token& tok : tokens) {
+    //     std::println("Token: '{}', Size: {}, Type: {}", tok.token(), tok.token().size(), str(tok.type()));
+    // }
+
     for (const Token& tok : tokens) {
-        switch (tok.type()) {
-            case TokenType::Id:           return print_id(tok);
-            case TokenType::QuotedId:     return print_quoted_id(tok);
-            case TokenType::Operator:     return print_operator(tok);
-            case TokenType::Quote:        return print_quote(tok);
-            case TokenType::Brace:        return print_brace(tok);
-            case TokenType::Sep:          return print_sep(tok);
-            case TokenType::Newline:      return print_newline(tok);
-            case TokenType::Space:        return print_space(tok);
-            case TokenType::Integer:      return print_integer(tok);
-            case TokenType::Float:        return print_float(tok);
-            case TokenType::MemberAccess: return print_member_access(tok);
-            case TokenType::TypeDecl:     return print_type_decl(tok);
-            case TokenType::Invalid:      return print_invalid(tok);
-        }
+        print_token(tok);
     }
     
 }
