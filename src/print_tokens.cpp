@@ -125,7 +125,7 @@ void Printer::print_sep([[maybe_unused]] const Token& tok) {
 }
 
 void Printer::print_newline([[maybe_unused]] const Token& tok) {
-    basic_print(colors::whitespace, "\\n\n");
+    basic_print(colors::whitespace, "↵\n");
     is_on_new_line = true;
 }
 

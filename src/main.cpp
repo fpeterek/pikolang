@@ -1,9 +1,34 @@
 #include <algorithm>
+#include <print>
 #include <string_view>
 
 #include "files.hpp"
 #include "tokenizer.hpp"
 #include "print_tokens.hpp"
+
+
+void win_check() {
+#if defined(_WIN32)
+    std::println(
+        "\x1b[38;5;196m"
+        R"( _____________________________________ )" "\n"
+        R"(/ Windows detected, program rejected. \)" "\n"
+        R"(\ Install a proper operating system.  /)" "\n"
+        R"( ------------------------------------- )" "\n"
+        R"(   \                                   )" "\n"
+        R"(    \                                  )" "\n"
+        R"(        .--.                           )" "\n"
+        R"(       |o_o |                          )" "\n"
+        R"(       |:_/ |                          )" "\n"
+        R"(      //   \ \                         )" "\n"
+        R"(     (|     | )                        )" "\n"
+        R"(    /'\_   _/`\                        )" "\n"
+        R"(    \___)=(___/                        )" "\n"
+    );
+    exit(-1);
+#endif
+}
+
 
 
 struct Args {
@@ -28,6 +53,8 @@ void run(const Args& args) {
 
 
 int main(int argc, const char* argv[]) {
+
+    win_check();
 
     std::vector<std::string_view> vec;
     vec.reserve(static_cast<size_t>(argc - 1));
