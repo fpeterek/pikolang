@@ -224,6 +224,11 @@ std::optional<Token> Tokenizer::get_quote() {
     while (has_char()) {
 
         const char current_char = current_character();
+
+        if (is_newline(current_char)) {
+            return std::nullopt;
+        }
+
         advance_state(current);
 
         if (current_char == '\\' and not is_escaped) {
