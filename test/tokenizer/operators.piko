@@ -1,0 +1,22 @@
+a += b
+c == d
+
+var1 <=> var2
+
+bitshift << 3
+bitshift >> 4
+
+masked | mask
+
+abc || def
+
+`first condition` && `second condition`
+
+`conditions without`&&`spaces`
+
+comparison<=>unformated
+
+multiplication*2
+
+`not real operator` &| `but should tokenize`
+
