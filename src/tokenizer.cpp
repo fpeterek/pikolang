@@ -93,6 +93,10 @@ bool is_float_char(const char c) {
     return is_float_begin(c) or c == 'e' or c == '_';
 }
 
+bool is_dec(const char c) {
+    return std::isdigit(c);
+}
+
 bool is_dec_like(const char c) {
     return std::isdigit(c) or c == '_';
 }
@@ -121,6 +125,10 @@ Tokenizer::iterator Tokenizer::current_iter() {
 
 Tokenizer::iterator Tokenizer::next_iter() {
     return current.iter + 1;
+}
+
+char Tokenizer::first_character() {
+    return *(token_start.iter);
 }
 
 char Tokenizer::previous_character() {
@@ -219,6 +227,7 @@ std::optional<Token> Tokenizer::get_quote() {
     advance_state(current);
 
     bool is_escaped = false;
+    bool is_terminated = false;
 
     while (has_char()) {
 
@@ -234,12 +243,17 @@ std::optional<Token> Tokenizer::get_quote() {
             is_escaped = true;
         }
         else if (current_char == quote and not is_escaped) {
+            is_terminated = true;
             break;
         }
         else {
             is_escaped = false;
         }
 
+    }
+
+    if (not is_terminated) {
+        return std::nullopt;
     }
 
     return consume_current_token(TokenType::Quote);
@@ -315,7 +329,7 @@ std::optional<Token> Tokenizer::get_float() {
 
     bool accept_e = previous != 'e';
 
-    while (has_char()) {
+    while (has_next()) {
         advance_state(current);
 
         if (accept_e and current_character() == 'e') {
@@ -329,24 +343,33 @@ std::optional<Token> Tokenizer::get_float() {
     return consume_current_token(TokenType::Float);
 }
 
+// FIXME: Fix number parsing
 std::optional<Token> Tokenizer::get_number() {
 
     if (not is_integer_begin(current_character()) and not is_float_begin(current_character())) {
         return std::nullopt;
     }
 
+    if (current_character() == '.' and not is_dec_like(next_character())) {
+        return std::nullopt;
+    }
+
     // TODO: Negative numbers, negative exponents
     while (has_char()) {
 
-        const char current_char = current_character();
         advance_state(current);
+        const char current_char = current_character();
 
         if (current_char == '#') {
             return get_integer();
         }
 
-        if (current_char == '.' or current_char == 'e') {
-            return get_float();
+        if ((current_char == '.' or current_char == 'e') ) {
+            if (is_dec(next_character())) {
+                return get_float();
+            }
+
+            break;
         }
 
         if (not is_dec_like(current_char)) {
@@ -367,7 +390,7 @@ std::optional<Token> Tokenizer::get_member_access() {
 
     advance_state(current);
 
-    if (*(token_start.iter) == '.') {
+    if (first_character() == '.') {
         return consume_current_token(TokenType::MemberAccess);
     }
 
@@ -398,7 +421,11 @@ std::optional<Token> Tokenizer::get_invalid() {
 
 
 bool Tokenizer::has_char() {
-    return token_start.iter != end;
+    return current.iter != end;
+}
+
+bool Tokenizer::has_next() {
+    return current.iter+1 != end;
 }
 
 

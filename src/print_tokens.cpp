@@ -16,7 +16,9 @@ namespace colors {
     constexpr std::string_view brace = "\x1b[38;5;140m";
     constexpr std::string_view quote = "\x1b[38;5;48m";
     constexpr std::string_view integer = "\x1b[38;5;224m";
-    constexpr std::string_view floating = "\x1b[38;5;216m";
+    // constexpr std::string_view floating = "\x1b[38;5;216m";
+    constexpr std::string_view floating = "\x1b[38;5;218m";
+	
     constexpr std::string_view member_access = "\x1b[38;5;69m";
     constexpr std::string_view type_decl = "\x1b[38;5;210m";
 

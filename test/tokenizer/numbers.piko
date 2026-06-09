@@ -1,0 +1,29 @@
+123
+
+456
+
+let number = 16#123abc
+
+
+let binary = 2#0101010
+let integer = 123456
+
+let oct = 8#744.round()
+
+let str = 1020.to_string()
+
+let float = 123.456
+
+
+let int_sep = 123_456_789
+
+let float_sep = 123_456.456_789
+
+let exp = 123e10
+
+let float_str = 123.456.to_string()
+
+number.to_string()
+
+number . to_string()
+

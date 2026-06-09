@@ -64,6 +64,7 @@ class Tokenizer {
     iterator current_iter();
     iterator next_iter();
 
+    char first_character();
     char previous_character();
     char current_character();
     char next_character();
@@ -73,6 +74,7 @@ class Tokenizer {
     Tokenized tokenize();
 
     bool has_char();
+    bool has_next();
     void process_token();
     Token get_next();
 
