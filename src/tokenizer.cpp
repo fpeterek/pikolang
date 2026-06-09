@@ -220,7 +220,6 @@ std::optional<Token> Tokenizer::get_quote() {
 
     bool is_escaped = false;
 
-    // TODO: Escape sequences
     while (has_char()) {
 
         const char current_char = current_character();

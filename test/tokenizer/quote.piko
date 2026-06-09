@@ -1,0 +1,13 @@
+"strings" "strings with spaces"
+
+      " indented   string  "
+
+"escape sequence \" \' \n"
+
+'c' 'char'   '\n'  '\''
+
+      "broken up
+string"
+
+'broken up
+char'
