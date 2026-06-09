@@ -6,6 +6,7 @@
 
 namespace {
 
+// https://talyian.github.io/ansicolors/
 namespace colors {
     using Color = std::string_view;
 
