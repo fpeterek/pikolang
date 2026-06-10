@@ -4,8 +4,21 @@
 
 let number = 16#123abc
 
+let negative_number_is_operator_and_literal = -25
 
-let binary = 2#0101010
+
+let binary = 2#01_01_010
+let binary0b = 0b01_01_010
+let binary0B = 0B01_01_010
+
+let oct = 8#123_456
+let oct0o = 0o123_456
+let oct0O = 0O123_456
+
+let hex = 16#abc_def
+let hex0x = 0xabc_def
+let hex0X = 0Xabcd_ef
+
 let integer = 123456
 
 let oct = 8#744.round()
@@ -20,6 +33,14 @@ let int_sep = 123_456_789
 let float_sep = 123_456.456_789
 
 let exp = 123e10
+let exp_str = 123e10.to_string()
+
+let neg_exp = 123e-10
+let exp_sub = 123e-10-123e-5
+
+let exp_hex_wont_pass = 123eabcd
+let exp_without_digits_wont_pass1 = 123e
+let exp_without_digits_wont_pass2 = 123e___
 
 let float_str = 123.456.to_string()
 

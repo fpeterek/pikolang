@@ -7,6 +7,7 @@
 #include <optional>
 #include <print>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 
@@ -98,11 +99,15 @@ bool is_dec(const char c) {
 }
 
 bool is_dec_like(const char c) {
-    return std::isdigit(c) or c == '_';
+    return is_dec(c) or c == '_';
+}
+
+bool is_num(const char c) {
+    return std::isalnum(c);
 }
 
 bool is_num_like(const char c) {
-    return std::isalnum(c) or c == '_';
+    return is_num(c) or c == '_';
 }
 
 bool is_member_access_char(const char c) {
@@ -112,6 +117,15 @@ bool is_member_access_char(const char c) {
 bool is_type_decl_char(const char c) {
     return c == ':';
 }
+
+static constexpr std::array integral_prefixes = {
+    std::string_view { "0b" },
+    std::string_view { "0B" },
+    std::string_view { "0o" },
+    std::string_view { "0O" },
+    std::string_view { "0x" },
+    std::string_view { "0X" },
+};
 
 }
 
@@ -141,6 +155,28 @@ char Tokenizer::current_character() {
 
 char Tokenizer::next_character() {
     return *next_iter();
+}
+
+bool Tokenizer::has_prefix(std::string_view prefix) {
+
+    auto it = current_iter();
+    auto prefix_it = prefix.begin();
+
+    while (it != end) {
+
+        if (prefix_it == prefix.end()) {
+            return true;
+        }
+
+        if (*prefix_it != *it) {
+            return false;
+        }
+
+        ++it;
+        ++prefix_it;
+    }
+
+    return false;
 }
 
 void Tokenizer::advance_state(State& state) {
@@ -312,7 +348,7 @@ std::optional<Token> Tokenizer::get_space() {
 
 std::optional<Token> Tokenizer::get_integer() {
 
-    if (not is_integer_begin(current_character())) {
+    if (not is_num(current_character())) {
         return std::nullopt;
     }
 
@@ -325,26 +361,49 @@ std::optional<Token> Tokenizer::get_integer() {
 }
 
 std::optional<Token> Tokenizer::get_float() {
-    const char previous = previous_character();
+    const char e_or_dot = current_character();
 
-    bool accept_e = previous != 'e';
+    bool accept_e = (e_or_dot != 'e');
+
+    size_t num_digits = 0;
 
     while (has_next()) {
+
         advance_state(current);
+
+        if (is_dec(current_character())) {
+            num_digits += 1;
+        }
 
         if (accept_e and current_character() == 'e') {
             accept_e = false;
+        }
+        else if (previous_character() == 'e' and current_character() == '-') {
+            continue;
         }
         else if (not is_dec_like(current_character())) {
             break;
         }
     }
 
+    // require at least one zero after the decimal point or inside the exponent
+    if (num_digits == 0) {
+        return std::nullopt;
+    }
+
     return consume_current_token(TokenType::Float);
 }
 
-// FIXME: Fix number parsing
 std::optional<Token> Tokenizer::get_number() {
+
+    for (std::string_view prefix : integral_prefixes) {
+        if (has_prefix(prefix)) {
+            for (size_t i = 0; i < prefix.size(); ++i) {
+                advance_state(current);
+            }
+            return get_integer();
+        }
+    }
 
     if (not is_integer_begin(current_character()) and not is_float_begin(current_character())) {
         return std::nullopt;
@@ -354,18 +413,21 @@ std::optional<Token> Tokenizer::get_number() {
         return std::nullopt;
     }
 
-    // TODO: Negative numbers, negative exponents
+    // TODO: Consider implementing negative numbers
+    //       It may be better to leave it for the parser to parse as a unary operator
+    //       Probably not needed in the tokenizer
     while (has_char()) {
 
         advance_state(current);
         const char current_char = current_character();
 
         if (current_char == '#') {
+            advance_state(current);
             return get_integer();
         }
 
         if ((current_char == '.' or current_char == 'e') ) {
-            if (is_dec(next_character())) {
+            if (is_dec(next_character()) or next_character() == '-') {
                 return get_float();
             }
 
@@ -425,7 +487,7 @@ bool Tokenizer::has_char() {
 }
 
 bool Tokenizer::has_next() {
-    return current.iter+1 != end;
+    return has_char() and current.iter+1 != end;
 }
 
 

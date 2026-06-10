@@ -69,6 +69,8 @@ class Tokenizer {
     char current_character();
     char next_character();
 
+    bool has_prefix(std::string_view prefix);
+
     Token consume_current_token(TokenType type);
 
     Tokenized tokenize();
