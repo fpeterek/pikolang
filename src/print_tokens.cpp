@@ -11,6 +11,7 @@ namespace colors {
     using Color = std::string_view;
 
     constexpr std::string_view standard = "\x1b[38;5;251m";
+    constexpr std::string_view keyword = "\x1b[38;5;76m";
     constexpr std::string_view identifier = "\x1b[38;5;222m";
     constexpr std::string_view whitespace = "\x1b[38;5;244m";
     constexpr std::string_view operator_ = "\x1b[38;5;39m";
@@ -38,6 +39,7 @@ class Printer {
     void basic_print(colors::Color color, std::string_view string);
     void basic_print(colors::Color color, const Token& tok);
 
+    void print_keyword(const Token& tok);
     void print_id(const Token& tok);
     void print_quoted_id(const Token& tok);
     void print_operator(const Token& tok);
@@ -91,6 +93,9 @@ void Printer::basic_print(colors::Color color, const Token& tok) {
     basic_print(color, tok.token());
 }
 
+void Printer::print_keyword(const Token& tok) {
+    basic_print(colors::keyword, tok);
+}
 
 void Printer::print_id(const Token& tok) {
     basic_print(colors::identifier, tok);
@@ -163,6 +168,7 @@ void Printer::print_invalid(const Token& tok) {
 
 void Printer::print_token(const Token& tok) {
     switch (tok.type()) {
+        case TokenType::Keyword:      return print_keyword(tok);
         case TokenType::Id:           return print_id(tok);
         case TokenType::QuotedId:     return print_quoted_id(tok);
         case TokenType::Operator:     return print_operator(tok);

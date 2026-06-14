@@ -127,6 +127,29 @@ static constexpr std::array integral_prefixes = {
     std::string_view { "0X" },
 };
 
+
+static constexpr std::array keywords = {
+    std::string_view { "import" },
+    std::string_view { "namespace" },
+    std::string_view { "pure" },
+    std::string_view { "fn" },
+    std::string_view { "let" },
+    std::string_view { "var" },
+    std::string_view { "if" },
+    std::string_view { "else" },
+    std::string_view { "for" },
+    std::string_view { "while" },
+    std::string_view { "break" },
+    std::string_view { "continue" },
+    std::string_view { "return" },
+};
+
+bool is_keyword(std::string_view sv) {
+    auto iter = std::find(keywords.begin(), keywords.end(), sv);
+
+    return iter != keywords.end();
+}
+
 }
 
 Tokenizer::iterator Tokenizer::previous_iter() {
@@ -215,7 +238,17 @@ std::optional<Token> Tokenizer::get_id() {
         advance_state(current);
     }
 
-    return consume_current_token(TokenType::Id);
+    Token token = consume_current_token(TokenType::Id);
+
+    if (is_keyword(token.token())) {
+        return Token {
+            token.token(),
+            token.source(),
+            TokenType::Keyword,
+        };
+    }
+
+    return token;
 }
 
 

@@ -59,6 +59,7 @@ namespace std {
 
 
 enum struct TokenType {
+    Keyword,
     Id,
     QuotedId,
     Operator,
@@ -76,6 +77,7 @@ enum struct TokenType {
 
 inline std::string_view str(TokenType type) {
     switch (type) {
+        case TokenType::Keyword:      return "Keyword";
         case TokenType::Id:           return "Id";
         case TokenType::QuotedId:     return "QuotedId";
         case TokenType::Operator:     return "Operator";
