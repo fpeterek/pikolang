@@ -44,7 +44,7 @@ struct Args {
 void run(const Args& args) {
 
     Files files;
-    const File& file = files.get(std::string { args[0] });
+    const File& file = files.get_or_load(std::string { args[0] });
 
     auto res = Tokenizer::tokenize(file);
 

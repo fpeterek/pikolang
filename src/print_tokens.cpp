@@ -10,21 +10,21 @@ namespace {
 namespace colors {
     using Color = std::string_view;
 
-    constexpr std::string_view standard = "\x1b[38;5;251m";
-    constexpr std::string_view keyword = "\x1b[38;5;76m";
-    constexpr std::string_view identifier = "\x1b[38;5;222m";
-    constexpr std::string_view whitespace = "\x1b[38;5;244m";
-    constexpr std::string_view operator_ = "\x1b[38;5;39m";
-    constexpr std::string_view brace = "\x1b[38;5;140m";
-    constexpr std::string_view quote = "\x1b[38;5;48m";
-    constexpr std::string_view integer = "\x1b[38;5;224m";
-    // constexpr std::string_view floating = "\x1b[38;5;216m";
-    constexpr std::string_view floating = "\x1b[38;5;218m";
+    constexpr Color standard = "\x1b[38;5;251m";
+    constexpr Color keyword = "\x1b[38;5;76m";
+    constexpr Color identifier = "\x1b[38;5;222m";
+    constexpr Color whitespace = "\x1b[38;5;244m";
+    constexpr Color operator_ = "\x1b[38;5;39m";
+    constexpr Color brace = "\x1b[38;5;140m";
+    constexpr Color quote = "\x1b[38;5;48m";
+    constexpr Color integer = "\x1b[38;5;224m";
+    // constexpr Color floating = "\x1b[38;5;216m";
+    constexpr Color floating = "\x1b[38;5;218m";
 	
-    constexpr std::string_view member_access = "\x1b[38;5;69m";
-    constexpr std::string_view type_decl = "\x1b[38;5;210m";
+    constexpr Color member_access = "\x1b[38;5;69m";
+    constexpr Color type_decl = "\x1b[38;5;210m";
 
-    constexpr std::string_view invalid = "\x1b[38;5;196m";
+    constexpr Color invalid = "\x1b[38;5;196m";
 }
 
 class Printer {

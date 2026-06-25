@@ -61,7 +61,7 @@ const File& Files::load_file(std::string filename) {
 }
 
 
-const File& Files::get(std::string file) {
+const File& Files::get_or_load(std::string file) {
     std::lock_guard lock { mutex };
 
     const auto it = files.find(file);
@@ -71,4 +71,14 @@ const File& Files::get(std::string file) {
     }
 
     return load_file(std::move(file));
+}
+
+
+const File& Files::get_with_lock(const std::string& file) {
+    std::lock_guard lock { mutex };
+    return files.at(file);
+}
+
+const File& Files::get(const std::string& file) const {
+    return files.at(file);
 }

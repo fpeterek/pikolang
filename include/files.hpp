@@ -37,7 +37,9 @@ class Files {
 
 public:
 
-    const File& get(std::string file);
+    const File& get_or_load(std::string file);
+    const File& get_with_lock(const std::string& file);
+    const File& get(const std::string& file) const;
 
 };
 
