@@ -1,62 +1,62 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include "tokenizer.hpp"
-
 #include <array>
 #include <optional>
-#include <variant>
 
+#include "tokenizer.hpp"
 #include "errors.hpp"
+#include "ast.hpp"
 
 
-class Import {
+namespace parser {
 
-    std::string lang;
-    std::string tgt;
-    
-public:
-    Import(std::string lang, std::string target) :
-        lang { std::move(lang) },
-        tgt { std::move(target) } { }
 
-    std::string_view language() { return lang; }
-    std::string_view target() { return tgt; }
+using iterator = Tokenized::const_iterator;
+
+
+struct Context {
+    iterator current;
+    iterator end;
 };
 
 
-using Statement = std::variant<Import>;
+struct Result {
+    std::optional<Statement> statement;
+    std::vector<Error> errors;
+    iterator next;
 
+    bool success() const {
+        return statement.has_value();
+    }
 
-class AST {
-    std::vector<Statement> stmts;
-    std::vector<Error> errs;
-
-public:
-    const std::vector<Statement>& statements() { return stmts; }
-    const std::vector<Error>& errors() { return errs; }
+    operator bool() const {
+        return success();
+    }
 };
+
 
 class Parser {
 
+    std::vector<Error> errors;
+    iterator current;
     const Tokenized& tokenized;
 
-    using Iterator = decltype(tokenized.tokens().begin());
-
-    Iterator expr_start;
-    Iterator current;
+    Context create_context();
+    void process_result(Result result);
 
     std::string_view filename() { return tokenized.file(); }
     auto& tokens() { return tokenized.tokens(); }
 
+    iterator end() { return tokens().end(); };
     
     Parser(const Tokenized& tokenized) :
-        tokenized { tokenized },
-        expr_start { tokenized.tokens().begin() },
-        current { tokenized.tokens().begin() }
+        current { tokenized.tokens().begin() },
+        tokenized { tokenized }
         { }
 
-    std::optional<Import> parse_import();
+
+    Result parse_import();
 
     static constexpr std::array parsers {
         &Parser::parse_import,
@@ -70,5 +70,6 @@ public:
 
 };
 
+}
 
 #endif // PARSER_HPP

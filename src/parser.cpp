@@ -1,49 +1,51 @@
 #include "parser.hpp"
+#include "token.hpp"
 #include <vector>
 
-void Parser::import_language() {
-    import_keyword();
-    ignore_space();
-    namespace_operator();
-    ignore_space();
-    import_language_specifier();
+
+namespace parser {
+
+namespace {
+
+bool is_import(const Token& token) {
+    return token.type() == TokenType::Keyword and
+        token.token() == "import";
 }
 
-void Parser::import_no_language() {
-    import_keyword();
+Result parse_import(parser::Context ctx) {
+    if (not is_import(*ctx.current)) {
+        return Result {};
+    }
+    return Result {};
 }
 
-void Parser::import_specifier() {
-    // TODO: Express this
-    //
-    // either
-    import_language();
-    // or
-    import_no_language();
 }
 
-std::optional<Import> Parser::parse_import() {
+Result Parser::parse_import() {
+    return parser::parse_import(create_context());
+}
 
-    import_specifier();
-    expect_space();
-    import_target();
-    expect_newline();
 
+Context Parser::create_context() {
+    return Context {
+        current,
+        end(),
+    };
+}
+
+void Parser::process_result(Result result) {
+    if (not result) {
+        return;
+    }
+
+    for (auto& err : result.errors) {
+        errors.emplace_back(std::move(err));
+    }
+
+    current = result.next;
 }
 
 AST Parser::parse() {
-
-    std::vector<Statement> statements;
-    std::vector<Error> errors;
-
-    for (const auto parser : parsers) {
-        auto res = (this->*parser)();
-
-        if (res) {
-        }
-    }
-    
-    return { };
 }
 
 
@@ -51,4 +53,6 @@ AST Parser::parse(const Tokenized& tokenized) {
     Parser parser { tokenized };   
 
     return parser.parse();
+}
+
 }

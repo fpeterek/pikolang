@@ -16,12 +16,24 @@ class Tokenized {
     std::vector<Token> toks;
 
 public:
+
+    using iterator = decltype(toks)::iterator;
+    using const_iterator = decltype(toks)::const_iterator;
+
     Tokenized(std::string_view file, std::vector<Token> tokens) :
         srcfile { file },
         toks { std::move(tokens) } { }
 
     std::string_view file() const { return srcfile; }
     const std::vector<Token>& tokens() const { return toks; }
+
+    auto begin(this auto& self) {
+        return self.toks.begin();
+    }
+
+    auto end(this auto& self) {
+        return self.toks.end();
+    }
 };
 
 
