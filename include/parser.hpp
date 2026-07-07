@@ -3,6 +3,7 @@
 
 #include <array>
 #include <optional>
+#include <string_view>
 
 #include "tokenizer.hpp"
 #include "errors.hpp"
@@ -16,8 +17,11 @@ using iterator = Tokenized::const_iterator;
 
 
 struct Context {
+    std::string_view filename;
     iterator current;
     iterator end;
+
+    const Token& token() const { return *current; }
 };
 
 

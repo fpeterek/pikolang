@@ -11,21 +11,21 @@
 class Error {
 
     std::string msg;
-    std::string src_file;
+    std::string_view src_file;
     SourcePosition src_pos;
 
 public:
 
-    Error(std::string msg, std::string file, SourcePosition pos) :
+    Error(std::string msg, std::string_view file, SourcePosition pos) :
         msg { std::move(msg) },
-        src_file { std::move(file) },
+        src_file { file },
         src_pos { std::move(pos) } {  }
 
     const std::string& message() const {
         return msg;
     }
     
-    const std::string& file() const {
+    std::string_view file() const {
         return src_file;
     }
 
