@@ -30,6 +30,17 @@ struct Result {
     std::vector<Error> errors;
     iterator next;
 
+    void add_error(Error err) {
+        errors.emplace_back(std::move(err));
+    }
+
+    template<typename... Args>
+    void add_error(Args&&... args) {
+        errors.emplace_back(Error {
+            std::forward<Args>(args)...,
+        });
+    }
+
     bool success() const {
         return statement.has_value();
     }

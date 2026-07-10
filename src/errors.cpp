@@ -110,7 +110,7 @@ void print_message(const Error& error) {
 
 void print_error(const Error& error, const Files& files) {
 
-    auto& file = files.get(error.file());
+    auto& file = files.get(std::string { error.file() });
 
     auto line = get_line(file.contents(), error.position().byte());
 

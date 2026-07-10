@@ -28,6 +28,11 @@ bool is_import(const Token& token) {
         token.token() == "import";
 }
 
+bool is_as(const Token& token) {
+    return token.type() == TokenType::Keyword and
+        token.token() == "as";
+}
+
 bool is_identifier(const Token& token) {
     return token.type() == TokenType::Id;
 }
@@ -51,14 +56,14 @@ void consume_import(parser::Context& ctx) {
     advance(ctx);
 }
 
-std::optional<Identifier> parse_identifier(parser::Context ctx, Result& result) {
+std::optional<Identifier> parse_identifier(parser::Context& ctx, Result& result) {
 
     if (not is_identifier(ctx.token())) {
-        result.errors.emplace_back(Error {
+        result.add_error(
             std::format("Invalid token '{}', identifier expected", ctx.token().token()),
             ctx.filename,
-            ctx.token().source(),
-        });
+            ctx.token().source()
+        );
 
         return std::nullopt;
     }
@@ -71,15 +76,15 @@ std::optional<Identifier> parse_identifier(parser::Context ctx, Result& result) 
     };
 }
 
-bool parse_scope_operator(parser::Context ctx, Result& result) {
+bool parse_scope_operator(parser::Context& ctx, Result& result) {
     skip_spaces(ctx);
 
     if (not is_scope_access(ctx.token())) {
-        result.errors.emplace_back(Error {
+        result.add_error(
             std::format("Invalid token '{}'", ctx.token().token()),
             ctx.filename,
             ctx.token().source()
-        });
+        );
 
         return false;
     }
@@ -90,14 +95,14 @@ bool parse_scope_operator(parser::Context ctx, Result& result) {
     return true;
 }
 
-std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context ctx, Result& result) {
+std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Result& result) {
     if (not is_identifier(ctx.token())) {
 
-        result.errors.emplace_back(Error {
+        result.add_error(
             std::format("Invalid token '{}'", ctx.token().token()),
             ctx.filename,
             ctx.token().source()
-        });
+        );
 
         return std::nullopt;
     }
@@ -112,7 +117,7 @@ std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context ctx, Res
 
     identifiers.emplace_back(std::move(*ident));
 
-    while (parse_scoped_identifier(ctx, result)) {
+    while (parse_scope_operator(ctx, result)) {
         auto member = parse_identifier(ctx, result);
 
         if (not result or not member) {
@@ -127,6 +132,19 @@ std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context ctx, Res
     };
 }
 
+std::optional<Identifier> parse_as(parser::Context& ctx, Result& res) {
+    skip_spaces(ctx);
+
+    if (not is_as(ctx.token())) {
+        return std::nullopt;
+    }
+
+    advance(ctx);
+    skip_spaces(ctx);
+
+    return parse_identifier(ctx, res);
+}
+
 Result parse_import(parser::Context ctx) {
     if (not is_import(ctx.token())) {
         return Result {};
@@ -137,13 +155,34 @@ Result parse_import(parser::Context ctx) {
     consume_import(ctx);
     skip_spaces(ctx);
 
-    auto ident = parse_scoped_identifier(ctx, result);
+    auto target = parse_scoped_identifier(ctx, result);
 
     if (not result) {
         return result;
     }
 
-    return Result {};
+    auto as = parse_as(ctx, result);
+
+    if (not result) {
+        return result;
+    }
+
+    std::string as_name = "";
+
+    if (as.has_value()) {
+        as_name = as.value().identifier();
+    }
+
+
+    result.statement = Statement {
+        Import {
+            "piko",
+            std::move(*target),
+            std::move(as_name),
+        }
+    };
+
+    return result;
 }
 
 }

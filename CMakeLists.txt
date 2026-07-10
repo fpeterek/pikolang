@@ -19,4 +19,5 @@ add_executable(
     src/files.cpp
     src/print_tokens.cpp
     src/errors.cpp
+    src/parser.cpp
 )

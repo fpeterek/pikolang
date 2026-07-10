@@ -17,6 +17,9 @@ public:
 
     Identifier(Identifier&& other) = default;
 
+    Identifier& operator=(const Identifier& other) = default;
+    Identifier& operator=(Identifier&& other) = default;
+
     std::string_view identifier() const { return ident; }
 };
 
@@ -30,6 +33,9 @@ public:
 
     ScopedIdentifier(ScopedIdentifier&& other) = default;
 
+    ScopedIdentifier& operator=(const ScopedIdentifier& other) = default;
+    ScopedIdentifier& operator=(ScopedIdentifier&& other) = default;
+
     const std::vector<Identifier>& identifiers() const { return idents; }
 };
 
@@ -37,14 +43,22 @@ class Import {
 
     std::string lang;
     ScopedIdentifier tgt;
+    std::string tgt_name;
     
 public:
-    Import(std::string lang, ScopedIdentifier target) :
+    Import(std::string lang, ScopedIdentifier target, std::string as = "") :
         lang { std::move(lang) },
-        tgt { std::move(target) } { }
+        tgt { std::move(target) },
+        tgt_name { std::move(as) } { }
+
+    Import(Import&& other) = default;
+
+    Import& operator=(const Import& other) = default;
+    Import& operator=(Import&& other) = default;
 
     std::string_view language() const { return lang; }
     const ScopedIdentifier& target() const { return tgt; }
+    std::string_view as() const { return tgt_name; }
 };
 
 

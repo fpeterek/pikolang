@@ -130,6 +130,7 @@ static constexpr std::array integral_prefixes = {
 
 static constexpr std::array keywords = {
     std::string_view { "import" },
+    std::string_view { "as" },
     std::string_view { "namespace" },
     std::string_view { "pure" },
     std::string_view { "fn" },
