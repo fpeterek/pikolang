@@ -70,6 +70,11 @@ class AST {
     std::vector<Error> errs;
 
 public:
+
+    AST(std::vector<Statement> statements, std::vector<Error> errors) :
+        stmts { std::move(statements) },
+        errs { std::move(errors) } { }
+
     const std::vector<Statement>& statements() { return stmts; }
     const std::vector<Error>& errors() { return errs; }
 };

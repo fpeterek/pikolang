@@ -41,6 +41,10 @@ struct Result {
         });
     }
 
+    bool has_statement() const {
+        return statement.has_value();
+    }
+
     bool success() const {
         return errors.empty() and statement.has_value();
     }
@@ -54,11 +58,12 @@ struct Result {
 class Parser {
 
     std::vector<Error> errors;
+    std::vector<Statement> statements;
     iterator current;
     const Tokenized& tokenized;
 
     Context create_context();
-    void process_result(Result result);
+    void process_result(Result& result);
 
     std::string_view filename() { return tokenized.file(); }
     auto& tokens() { return tokenized.tokens(); }
@@ -73,7 +78,7 @@ class Parser {
 
     Result parse_import();
 
-    static constexpr std::array parsers {
+    static constexpr std::array top_level_parsers {
         &Parser::parse_import,
     };
 

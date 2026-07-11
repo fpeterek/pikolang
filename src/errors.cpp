@@ -1,4 +1,5 @@
 #include "errors.hpp"
+#include "source_position.hpp"
 #include "token.hpp"
 
 #include <algorithm>
@@ -32,7 +33,7 @@ namespace colors {
 }
 
 
-int max_width() {
+size_t max_width() {
     return 80;
 }
 
@@ -69,13 +70,44 @@ std::string_view::const_iterator get_line_end(
     return std::find(str.begin() + idx, str.end(), '\n');
 }
 
-std::string_view get_line(std::string_view str, size_t index) {
+std::string_view extract_line(std::string_view str, size_t index) {
     
     return std::string_view {
         get_line_begin(str, index),
         get_line_end(str, index)
     };
 
+}
+
+struct ErrorLine {
+
+    std::string_view full_line;
+    std::string_view trimmed_line;
+
+    size_t error_idx;
+
+};
+
+ErrorLine get_line(std::string_view str, SourcePosition pos) {
+    auto line = extract_line(str, pos.byte());
+
+    const size_t x = pos.x();
+
+    const size_t left_max = max_width() / 2;
+
+    const size_t marker_offset = std::min(x, left_max);
+
+    const size_t left = x - marker_offset;
+
+    std::string_view trimmed =
+        std::string_view { line.begin() + left, line.end() }
+            .subview(0, max_width());
+
+    return ErrorLine {
+        line,
+        trimmed,
+        marker_offset
+    };
 }
 
 
@@ -95,7 +127,9 @@ void print_header(const File& file, SourcePosition pos) {
     std::println("{}", msg);
 }
 
-void print_line(std::string_view line) {
+
+void print_line(std::string_view line, SourcePosition pos) {
+    std::println("{}", line);
 
 }
 
@@ -115,7 +149,7 @@ void print_error(const Error& error, const Files& files) {
     auto line = get_line(file.contents(), error.position().byte());
 
     print_header(file, error.position());
-    print_line(line);
+    print_line(line, error.position());
     print_marker(line);
     print_message(error);
 }

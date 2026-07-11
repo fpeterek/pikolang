@@ -219,8 +219,8 @@ Context Parser::create_context() {
     };
 }
 
-void Parser::process_result(Result result) {
-    if (not result) {
+void Parser::process_result(Result& result) {
+    if (not result.has_statement()) {
         return;
     }
 
@@ -228,10 +228,31 @@ void Parser::process_result(Result result) {
         errors.emplace_back(std::move(err));
     }
 
+    if (result.statement) {
+        statements.emplace_back(std::move(*result.statement));
+    }
+
     current = result.next;
 }
 
 AST Parser::parse() {
+
+    while (current != end()) {
+        for (auto p : top_level_parsers) {
+            Result res = (this->*p)();
+
+            process_result(res);
+
+            if (res.has_statement()) {
+                break;
+            }
+        }
+    }
+
+    return AST {
+        std::move(statements),
+        std::move(errors)
+    };
 }
 
 
