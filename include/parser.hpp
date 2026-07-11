@@ -42,7 +42,7 @@ struct Result {
     }
 
     bool success() const {
-        return statement.has_value();
+        return errors.empty() and statement.has_value();
     }
 
     operator bool() const {

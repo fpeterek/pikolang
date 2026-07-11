@@ -52,6 +52,20 @@ void skip_spaces(parser::Context& ctx) {
     }
 }
 
+void expect_newline(parser::Context& ctx, Result& result) {
+    if (not is_newline(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', newline expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
 void consume_import(parser::Context& ctx) {
     advance(ctx);
 }
@@ -173,6 +187,11 @@ Result parse_import(parser::Context ctx) {
         as_name = as.value().identifier();
     }
 
+    expect_newline(ctx, result);
+
+    if (not result) {
+        return result;
+    }
 
     result.statement = Statement {
         Import {
