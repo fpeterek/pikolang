@@ -6,6 +6,7 @@
 #include "errors.hpp"
 #include "files.hpp"
 #include "parser.hpp"
+#include "print_ast.hpp"
 #include "tokenizer.hpp"
 #include "print_tokens.hpp"
 
@@ -60,6 +61,8 @@ void run(const Args& args) {
     if (not ast.errors().empty()) {
         ErrorPrinter::print_errors(ast.errors(), files);
     }
+
+    print_ast(ast);
 
 }
 

@@ -34,7 +34,7 @@ void print_import(const ast::Import& import) {
     print_scoped(import.target());
 
     if (import.has_alias()) {
-        std::print("{}as ", colors::keyword);
+        std::print("{} as ", colors::keyword);
         print_identifier(import.as());
     }
 

@@ -89,11 +89,11 @@ std::optional<ast::Identifier> parse_identifier(parser::Context& ctx, Result& re
         return std::nullopt;
     }
 
-    std::string id { ctx.token().token() };
+    std::string_view id { ctx.token().token() };
     advance(ctx);
 
     return ast::Identifier {
-        std::move(id)
+        id
     };
 }
 
@@ -102,7 +102,7 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
 
     if (not is_scope_access(ctx.token())) {
         result.add_error(
-            std::format("Invalid token '{}'", ctx.token().token()),
+            std::format("Invalid token '{}', '::' expected", ctx.token().token()),
             ctx.filename,
             ctx.token().source()
         );
@@ -122,7 +122,7 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
     if (not is_identifier(ctx.token())) {
 
         result.add_error(
-            std::format("Invalid token '{}'", ctx.token().token()),
+            std::format("Invalid token '{}', identifier expected", ctx.token().token()),
             ctx.filename,
             ctx.token().source()
         );
@@ -134,16 +134,23 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
 
     auto ident = parse_identifier(ctx, result);
 
-    if (not result or not ident) {
+    if (result.has_errors() or not ident) {
         return std::nullopt;
     }
 
     identifiers.emplace_back(std::move(*ident));
 
-    while (parse_scope_operator(ctx, result)) {
+    while (true) {
+
+        skip_spaces(ctx);
+        if (not is_scope_access(ctx.token())) {
+            break;
+        }
+        parse_scope_operator(ctx, result);
+
         auto member = parse_identifier(ctx, result);
 
-        if (not result or not member) {
+        if (result.has_errors() or not member) {
             return std::nullopt;
         }
 
@@ -234,7 +241,7 @@ Result parse_import(parser::Context ctx) {
 
     auto target = parse_scoped_identifier(ctx, result);
 
-    if (not result) {
+    if (not target) {
         std::println("{}missing target{}", colors::gray, colors::standard);
         return result;
     }
@@ -243,7 +250,7 @@ Result parse_import(parser::Context ctx) {
 
     auto as = parse_as(ctx, result);
 
-    if (not result) {
+    if (not as) {
         result.statement = ast::Statement {
             ast::Import {
                 "piko",
@@ -255,7 +262,7 @@ Result parse_import(parser::Context ctx) {
         return result;
     }
 
-    std::string as_name = "";
+    std::string_view as_name = "";
 
     if (as.has_value()) {
         as_name = as.value().identifier();
@@ -263,11 +270,6 @@ Result parse_import(parser::Context ctx) {
 
     expect_newline(ctx, result);
 
-    result.next = ctx.current;
-
-    if (not result) {
-        return result;
-    }
 
     result.statement = ast::Statement {
         ast::Import {
@@ -276,6 +278,8 @@ Result parse_import(parser::Context ctx) {
             std::move(as_name),
         }
     };
+    result.next = ctx.current;
+
 
     return result;
 }

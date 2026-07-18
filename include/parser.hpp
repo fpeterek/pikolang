@@ -5,6 +5,7 @@
 #include <optional>
 #include <string_view>
 
+#include "colors.hpp"
 #include "tokenizer.hpp"
 #include "errors.hpp"
 #include "ast.hpp"
@@ -43,6 +44,14 @@ struct Result {
 
     bool has_statement() const {
         return statement.has_value();
+    }
+
+    bool no_errors() const {
+        return errors.empty();
+    }
+
+    bool has_errors() const {
+        return not errors.empty();
     }
 
     bool success() const {
