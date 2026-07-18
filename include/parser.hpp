@@ -26,7 +26,7 @@ struct Context {
 
 
 struct Result {
-    std::optional<Statement> statement;
+    std::optional<ast::Statement> statement;
     std::vector<Error> errors;
     iterator next;
 
@@ -58,7 +58,7 @@ struct Result {
 class Parser {
 
     std::vector<Error> errors;
-    std::vector<Statement> statements;
+    std::vector<ast::Statement> statements;
     iterator current;
     const Tokenized& tokenized;
 
@@ -77,16 +77,20 @@ class Parser {
 
 
     Result parse_import();
+    Result parse_empty();
+    Result parse_invalid();
 
     static constexpr std::array top_level_parsers {
         &Parser::parse_import,
+        &Parser::parse_empty,
+        &Parser::parse_invalid,
     };
 
-    AST parse();
+    ast::AST parse();
 
 public:
 
-    static AST parse(const Tokenized& tokenized);
+    static ast::AST parse(const Tokenized& tokenized);
 
 };
 

@@ -1,40 +1,18 @@
 #include "errors.hpp"
 #include "source_position.hpp"
-#include "token.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <string_view>
 #include <print>
 
+#include "colors.hpp"
 
 namespace {
 
-namespace colors {
-    using Color = std::string_view;
-
-    constexpr Color standard = "\x1b[38;5;251m";
-    constexpr Color filename = "\x1b[38;5;218m";
-    constexpr Color position = "\x1b[38;5;39m";
-    constexpr Color gray = "\x1b[38;5;244m";
-    constexpr Color error = "\x1b[38;5;196m";
-
-    constexpr Color keyword = "\x1b[38;5;76m";
-    constexpr Color identifier = "\x1b[38;5;222m";
-    constexpr Color brace = "\x1b[38;5;140m";
-    constexpr Color quote = "\x1b[38;5;48m";
-    constexpr Color integer = "\x1b[38;5;224m";
-    // constexpr Color floating = "\x1b[38;5;216m";
-    constexpr Color floating = "\x1b[38;5;218m";
-	
-    constexpr Color member_access = "\x1b[38;5;69m";
-    constexpr Color type_decl = "\x1b[38;5;210m";
-
-}
-
 
 size_t max_width() {
-    return 80;
+    return 120;
 }
 
 std::string_view::const_iterator get_line_begin(
@@ -79,12 +57,19 @@ std::string_view extract_line(std::string_view str, size_t index) {
 
 }
 
+struct PrintBoundaries {
+    size_t begin_ommitted;
+    size_t end_ommitted;
+};
+
 struct ErrorLine {
 
     std::string_view full_line;
     std::string_view trimmed_line;
 
-    size_t error_idx;
+    size_t marker_position;
+
+    PrintBoundaries boundaries;
 
 };
 
@@ -99,14 +84,17 @@ ErrorLine get_line(std::string_view str, SourcePosition pos) {
 
     const size_t left = x - marker_offset;
 
-    std::string_view trimmed =
-        std::string_view { line.begin() + left, line.end() }
-            .subview(0, max_width());
+    std::string_view trimmed_left = std::string_view { line.begin() + left, line.end() };
+    std::string_view trimmed = trimmed_left.subview(0, max_width());
 
     return ErrorLine {
         line,
         trimmed,
-        marker_offset
+        marker_offset,
+        PrintBoundaries {
+            left,
+            trimmed_left.size() - trimmed.size(),
+        }
     };
 }
 
@@ -128,17 +116,68 @@ void print_header(const File& file, SourcePosition pos) {
 }
 
 
-void print_line(std::string_view line, SourcePosition pos) {
-    std::println("{}", line);
+void print_line(const ErrorLine& line) {
 
+    std::string_view fully_trimmed = line.trimmed_line;
+    bool left_ellipsis  = false;
+    bool right_ellipsis = false;
+
+    if (line.boundaries.begin_ommitted > 0) {
+        fully_trimmed = fully_trimmed.subview(3);
+        left_ellipsis = true;
+    }
+    if (line.boundaries.end_ommitted > 0) {
+        fully_trimmed = fully_trimmed.subview(0, fully_trimmed.size() - 3);
+        right_ellipsis = true;
+    }
+
+    if (left_ellipsis) {
+        std::print("{}...", colors::gray);
+    }
+
+    std::print("{}{}", colors::standard, fully_trimmed);
+
+    if (right_ellipsis) {
+        std::print("{}...{}", colors::gray, colors::standard);
+    }
+
+    std::println();
 }
 
-void print_marker(std::string_view line) {
+void print_offset(const size_t offset) {
+    static constexpr std::string_view spaces = "                                                                                                    ";
 
+    size_t printed = 0;
+
+    std::print("{}", colors::standard);
+    while (true) {
+        const size_t to_print = offset - printed;
+
+        if (to_print <= spaces.size()) {
+            std::print("{}", spaces.subview(0, to_print));
+            break;
+        }
+
+        std::print("{}", spaces);
+        printed += spaces.size();
+    }
 }
 
-void print_message(const Error& error) {
+void pad_until_index(size_t idx) {
+    if (idx == 0) {
+        return;
+    }
+    print_offset(idx - 1);
+}
 
+void print_marker(const ErrorLine& line) {
+    pad_until_index(line.marker_position);
+    std::println("^");
+}
+
+void print_message(const ErrorLine& line, const Error& error) {
+    pad_until_index(line.marker_position);
+    std::println("{}", error.message());
 }
 
 
@@ -146,12 +185,12 @@ void print_error(const Error& error, const Files& files) {
 
     auto& file = files.get(std::string { error.file() });
 
-    auto line = get_line(file.contents(), error.position().byte());
+    auto line = get_line(file.contents(), error.position());
 
     print_header(file, error.position());
-    print_line(line, error.position());
+    print_line(line);
     print_marker(line);
-    print_message(error);
+    print_message(line, error);
 }
 
 } // namespace

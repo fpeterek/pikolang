@@ -3,11 +3,10 @@
 #include <format>
 #include <optional>
 #include <vector>
-
-#include <experimental/scope>
+#include <print>
 
 #include "ast.hpp"
-#include "errors.hpp"
+#include "colors.hpp"
 #include "token.hpp"
 
 
@@ -46,6 +45,12 @@ void advance(parser::Context& ctx) {
     ctx.current += 1;
 }
 
+void skip_empty(parser::Context& ctx) {
+    while (is_space(ctx.token()) or is_newline(ctx.token())) {
+        advance(ctx);
+    }
+}
+
 void skip_spaces(parser::Context& ctx) {
     while (is_space(ctx.token())) {
         advance(ctx);
@@ -66,11 +71,13 @@ void expect_newline(parser::Context& ctx, Result& result) {
     advance(ctx);
 }
 
-void consume_import(parser::Context& ctx) {
+void skip_import_keyword(parser::Context& ctx) {
     advance(ctx);
 }
 
-std::optional<Identifier> parse_identifier(parser::Context& ctx, Result& result) {
+std::optional<ast::Identifier> parse_identifier(parser::Context& ctx, Result& result) {
+
+    skip_spaces(ctx);
 
     if (not is_identifier(ctx.token())) {
         result.add_error(
@@ -85,7 +92,7 @@ std::optional<Identifier> parse_identifier(parser::Context& ctx, Result& result)
     std::string id { ctx.token().token() };
     advance(ctx);
 
-    return Identifier {
+    return ast::Identifier {
         std::move(id)
     };
 }
@@ -109,7 +116,9 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
     return true;
 }
 
-std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Result& result) {
+std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Result& result) {
+    skip_spaces(ctx);
+
     if (not is_identifier(ctx.token())) {
 
         result.add_error(
@@ -121,7 +130,7 @@ std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Re
         return std::nullopt;
     }
 
-    std::vector<Identifier> identifiers;
+    std::vector<ast::Identifier> identifiers;
 
     auto ident = parse_identifier(ctx, result);
 
@@ -141,12 +150,12 @@ std::optional<ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Re
         identifiers.emplace_back(std::move(*member));
     }
 
-    return ScopedIdentifier {
+    return ast::ScopedIdentifier {
         std::move(identifiers)
     };
 }
 
-std::optional<Identifier> parse_as(parser::Context& ctx, Result& res) {
+std::optional<ast::Identifier> parse_as(parser::Context& ctx, Result& res) {
     skip_spaces(ctx);
 
     if (not is_as(ctx.token())) {
@@ -159,25 +168,90 @@ std::optional<Identifier> parse_as(parser::Context& ctx, Result& res) {
     return parse_identifier(ctx, res);
 }
 
+Result parse_empty(parser::Context ctx) {
+    Result result {
+        ast::Empty { },
+        {},
+        ctx.current,
+    };
+
+    skip_spaces(ctx);
+    expect_newline(ctx, result);
+
+    if (result) {
+        result.next = ctx.current;
+    }
+
+    return result;
+}
+
+Result parse_invalid(parser::Context ctx) {
+    ast::Invalid invalid { ctx.token().token() };
+    advance(ctx);
+
+    Result result {
+        std::move(invalid),
+        {},
+        ctx.current
+    };
+
+    std::string token;
+    token.reserve(ctx.token().token().size());
+
+    for (char c : ctx.token().token()) {
+        if (c == '\n') {
+            token += "\\n";
+        } else if (c == '\r') {
+            token += "\\r";
+        } else if (c == '\t') {
+            token += "\\t";
+        } else {
+            token += c;
+        }
+    }
+
+    result.add_error(
+        std::format("Unexpected token '{}'", token),
+        ctx.filename,
+        ctx.token().source()
+    );
+
+    return result;
+}
+
 Result parse_import(parser::Context ctx) {
+    skip_empty(ctx);
+
     if (not is_import(ctx.token())) {
+        std::println("{}not import{}", colors::gray, colors::standard);
         return Result {};
     }
 
     Result result { };
 
-    consume_import(ctx);
+    skip_import_keyword(ctx);
     skip_spaces(ctx);
 
     auto target = parse_scoped_identifier(ctx, result);
 
     if (not result) {
+        std::println("{}missing target{}", colors::gray, colors::standard);
         return result;
     }
+
+    skip_spaces(ctx);
 
     auto as = parse_as(ctx, result);
 
     if (not result) {
+        result.statement = ast::Statement {
+            ast::Import {
+                "piko",
+                std::move(*target),
+                "",
+            }
+        };
+        result.next = ctx.current;
         return result;
     }
 
@@ -189,12 +263,14 @@ Result parse_import(parser::Context ctx) {
 
     expect_newline(ctx, result);
 
+    result.next = ctx.current;
+
     if (not result) {
         return result;
     }
 
-    result.statement = Statement {
-        Import {
+    result.statement = ast::Statement {
+        ast::Import {
             "piko",
             std::move(*target),
             std::move(as_name),
@@ -210,6 +286,13 @@ Result Parser::parse_import() {
     return parser::parse_import(create_context());
 }
 
+Result Parser::parse_empty() {
+    return parser::parse_empty(create_context());
+}
+
+Result Parser::parse_invalid() {
+    return parser::parse_invalid(create_context());
+}
 
 Context Parser::create_context() {
     return Context {
@@ -235,7 +318,7 @@ void Parser::process_result(Result& result) {
     current = result.next;
 }
 
-AST Parser::parse() {
+ast::AST Parser::parse() {
 
     while (current != end()) {
         for (auto p : top_level_parsers) {
@@ -249,14 +332,14 @@ AST Parser::parse() {
         }
     }
 
-    return AST {
+    return ast::AST {
         std::move(statements),
         std::move(errors)
     };
 }
 
 
-AST Parser::parse(const Tokenized& tokenized) {
+ast::AST Parser::parse(const Tokenized& tokenized) {
     Parser parser { tokenized };   
 
     return parser.parse();

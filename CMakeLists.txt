@@ -14,10 +14,11 @@ include_directories(
 
 add_executable(
     pikoc
-    src/main.cpp
-    src/tokenizer.cpp
-    src/files.cpp
-    src/print_tokens.cpp
     src/errors.cpp
+    src/files.cpp
+    src/main.cpp
     src/parser.cpp
+    src/print_ast.cpp
+    src/print_tokens.cpp
+    src/tokenizer.cpp
 )

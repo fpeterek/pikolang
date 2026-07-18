@@ -2,17 +2,21 @@
 #define AST_HPP
 
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
 #include "errors.hpp"
 
+namespace ast {
+
+
 class Identifier {
-    std::string ident;
+    std::string_view ident;
 
 public:
-    Identifier(std::string identifier) :
-        ident { std::move(identifier) }
+    Identifier(std::string_view identifier) :
+        ident { identifier }
         { }
 
     Identifier(Identifier&& other) = default;
@@ -41,15 +45,15 @@ public:
 
 class Import {
 
-    std::string lang;
+    std::string_view lang;
     ScopedIdentifier tgt;
-    std::string tgt_name;
+    std::string_view tgt_name;
     
 public:
-    Import(std::string lang, ScopedIdentifier target, std::string as = "") :
-        lang { std::move(lang) },
+    Import(std::string_view lang, ScopedIdentifier target, std::string_view as = "") :
+        lang { lang },
         tgt { std::move(target) },
-        tgt_name { std::move(as) } { }
+        tgt_name { as } { }
 
     Import(Import&& other) = default;
 
@@ -59,10 +63,35 @@ public:
     std::string_view language() const { return lang; }
     const ScopedIdentifier& target() const { return tgt; }
     std::string_view as() const { return tgt_name; }
+
+    bool has_alias() const { return not tgt_name.empty(); }
 };
 
+class Invalid {
+    std::string_view tok;
 
-using Statement = std::variant<Import>;
+public:
+
+    Invalid(std::string_view token) :
+        tok { token } { }
+
+    Invalid(Invalid&& other) = default;
+
+    Invalid& operator=(const Invalid& other) = default;
+    Invalid& operator=(Invalid&& other) = default;
+
+    std::string_view token() const { return tok; }
+};
+
+class Empty {
+public:
+    Empty() noexcept = default;
+    Empty(Empty&& other) = default;
+    Empty& operator=(const Empty& other) = default;
+    Empty& operator=(Empty&& other) = default;
+};
+
+using Statement = std::variant<Import, Invalid, Empty>;
 
 
 class AST {
@@ -75,8 +104,11 @@ public:
         stmts { std::move(statements) },
         errs { std::move(errors) } { }
 
-    const std::vector<Statement>& statements() { return stmts; }
-    const std::vector<Error>& errors() { return errs; }
+    const std::vector<Statement>& statements() const { return stmts; }
+    const std::vector<Error>& errors() const { return errs; }
 };
+
+
+} // namespace ast
 
 #endif // AST_HPP

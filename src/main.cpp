@@ -2,7 +2,10 @@
 #include <print>
 #include <string_view>
 
+#include "colors.hpp"
+#include "errors.hpp"
 #include "files.hpp"
+#include "parser.hpp"
 #include "tokenizer.hpp"
 #include "print_tokens.hpp"
 
@@ -46,9 +49,18 @@ void run(const Args& args) {
     Files files;
     const File& file = files.get_or_load(std::string { args[0] });
 
-    auto res = Tokenizer::tokenize(file);
+    std::println("{}Tokenizing...{}", colors::gray, colors::standard);
+    auto tokenized = Tokenizer::tokenize(file);
 
-    print_tokens(res.tokens());
+    print_tokens(tokenized.tokens());
+
+    std::println("{}Parsing...{}", colors::gray, colors::standard);
+    auto ast = parser::Parser::parse(tokenized);
+
+    if (not ast.errors().empty()) {
+        ErrorPrinter::print_errors(ast.errors(), files);
+    }
+
 }
 
 
