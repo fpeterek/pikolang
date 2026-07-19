@@ -8,11 +8,16 @@
 #include "ast.hpp"
 #include "colors.hpp"
 #include "token.hpp"
+#include "language.hpp"
 
 
 namespace parser {
 
 namespace {
+
+namespace kwd = language::keywords;
+namespace ops = language::operators;
+
 
 bool is_space(const Token& token) {
     return token.type() == TokenType::Space;
@@ -22,24 +27,40 @@ bool is_newline(const Token& token) {
     return token.type() == TokenType::Newline;
 }
 
+bool is_open_paren(const Token& token) {
+    return token.type() == TokenType::Brace and token.token() == "(";
+}
+
+bool is_closed_paren(const Token& token) {
+    return token.type() == TokenType::Brace and token.token() == ")";
+}
+
+bool is_arrow(const Token& token) {
+    return token.type() == TokenType::Operator and token.token() == "->";
+}
+
+bool is_assign_operator(const Token& token) {
+    return token.type() == TokenType::Operator and token.token() == "=";
+}
+
 bool is_import(const Token& token) {
     return token.type() == TokenType::Keyword and
-        token.token() == "import";
+        token.token() == kwd::import;
 }
 
 bool is_as(const Token& token) {
     return token.type() == TokenType::Keyword and
-        token.token() == "as";
+        token.token() == kwd::as;
 }
 
 bool is_pure(const Token& token) {
     return token.type() == TokenType::Keyword and
-        token.token() == "pure";
+        token.token() == kwd::pure;
 }
 
 bool is_fn(const Token& token) {
     return token.type() == TokenType::Keyword and
-        token.token() == "fn";
+        token.token() == kwd::fn;
 }
 
 bool is_identifier(const Token& token) {
@@ -48,7 +69,7 @@ bool is_identifier(const Token& token) {
 
 bool is_scope_access(const Token& token) {
     return token.type() == TokenType::MemberAccess and
-        token.token() == "::";
+        token.token() == ops::member_access;
 }
 
 void advance(parser::Context& ctx) {
@@ -81,7 +102,67 @@ void expect_newline(parser::Context& ctx, Result& result) {
     advance(ctx);
 }
 
+void expect_open_paren(parser::Context& ctx, Result& result) {
+    if (not is_open_paren(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', '(' expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
+void expect_closed_paren(parser::Context& ctx, Result& result) {
+    if (not is_closed_paren(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', ')' expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
+void expect_arrow(parser::Context& ctx, Result& result) {
+    if (not is_arrow(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', '->' expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
+void expect_assignment(parser::Context& ctx, Result& result) {
+    if (not is_assign_operator(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', '=' expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
 void skip_import_keyword(parser::Context& ctx) {
+    advance(ctx);
+}
+
+void skip_fn_keyword(parser::Context& ctx) {
     advance(ctx);
 }
 
@@ -112,7 +193,7 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
 
     if (not is_scope_access(ctx.token())) {
         result.add_error(
-            std::format("Invalid token '{}', '::' expected", ctx.token().token()),
+            std::format("Invalid token '{}', '{}' expected", ctx.token().token(), ops::member_access),
             ctx.filename,
             ctx.token().source()
         );
@@ -294,6 +375,10 @@ Result parse_import(parser::Context ctx) {
     return result;
 }
 
+std::optional<ast::Expression> parse_expression(parser::Context& ctx, Result& result) {
+    return std::nullopt;
+}
+
 Result parse_fn(parser::Context ctx) {
     skip_empty(ctx);
 
@@ -301,15 +386,54 @@ Result parse_fn(parser::Context ctx) {
 
     if (is_pure(ctx.token())) {
         advance(ctx);
-        skip_spaces(ctx);
+        skip_empty(ctx);
     }
 
     if (not is_fn(ctx.token()) and not pure) {
         return Result { };
     }
 
+    skip_fn_keyword(ctx);
 
-    return Result { };
+    skip_empty(ctx);
+
+    Result result;
+
+    auto fn_name = parse_identifier(ctx, result);
+
+    if (not fn_name.has_value()) {
+        result.add_error(
+            "Expecting function name",
+            ctx.filename,
+            ctx.token().source()
+        );
+    }
+
+    skip_empty(ctx);
+
+    expect_open_paren(ctx, result);
+
+    // TODO: Parse args
+
+    expect_closed_paren(ctx, result);
+
+    skip_empty(ctx);
+
+    expect_arrow(ctx, result);
+
+    skip_empty(ctx);
+
+    auto ret_type = parse_identifier(ctx, result);
+
+    skip_empty(ctx);
+
+    expect_assignment(ctx, result);
+
+    skip_empty(ctx);
+
+    auto body = parse_expression(ctx, result);
+
+    return result;
 }
 
 }

@@ -1,0 +1,11 @@
+
+fn main(args: Array[String]) -> Unit = {
+    std::println("Test")
+}
+
+
+pure fn add(x: i32, y: i32) -> i32 = x + y
+
+pure mult(x: i32, y: i32) -> i32 = x * y
+
+pure mult(x: i32, y: i32) -> i32 = builtin::multiply(x, y)

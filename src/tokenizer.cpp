@@ -1,14 +1,14 @@
 #include "tokenizer.hpp"
-#include "token.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <array>
 #include <optional>
-#include <print>
-#include <stdexcept>
 #include <string_view>
 #include <utility>
+
+#include "token.hpp"
+#include "language.hpp"
 
 
 namespace {
@@ -25,45 +25,16 @@ bool is_id_quote(const char c) {
     return c == '`';
 }
 
-constexpr std::array operator_chars {
-    // Assignment
-    '=',
-
-    // Comparison
-    '<', '>',
-
-    // Arithmetic
-    '+', '-', '*', '/', '%', 
-
-    // Optional
-    '?', '!',
-
-    // Bitwise
-    '&', '|', '^', '~',
-
-};
-
 bool is_operator_char(const char c) {
-    return std::ranges::find(operator_chars, c) != operator_chars.end();
+    return std::ranges::find(language::operator_chars, c) != language::operator_chars.end();
 }
 
 bool is_quote(const char c) {
     return c == '\'' or c == '"';
 }
 
-constexpr std::array brace_chars {
-    // Scope
-    '{', '}',
-
-    // Apply/Index
-    '(', ')',
-
-    // Template/Array
-    '[', ']',
-};
-
 bool is_brace(const char c) {
-    return std::ranges::find(brace_chars, c) != brace_chars.end();
+    return std::ranges::find(language::brace_chars, c) != language::brace_chars.end();
 }
 
 bool is_sep(const char c) {
@@ -127,28 +98,14 @@ static constexpr std::array integral_prefixes = {
     std::string_view { "0X" },
 };
 
+bool is_keyword(std::string_view token) {
+    auto iter = std::find(
+        language::keywords_array.begin(),
+        language::keywords_array.end(),
+        token
+    );
 
-static constexpr std::array keywords = {
-    std::string_view { "import" },
-    std::string_view { "as" },
-    std::string_view { "namespace" },
-    std::string_view { "pure" },
-    std::string_view { "fn" },
-    std::string_view { "let" },
-    std::string_view { "var" },
-    std::string_view { "if" },
-    std::string_view { "else" },
-    std::string_view { "for" },
-    std::string_view { "while" },
-    std::string_view { "break" },
-    std::string_view { "continue" },
-    std::string_view { "return" },
-};
-
-bool is_keyword(std::string_view sv) {
-    auto iter = std::find(keywords.begin(), keywords.end(), sv);
-
-    return iter != keywords.end();
+    return iter != language::keywords_array.end();
 }
 
 }

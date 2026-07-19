@@ -1,12 +1,13 @@
 #ifndef AST_HPP
 #define AST_HPP
 
-#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
+#include <optional>
 
 #include "errors.hpp"
+
 
 namespace ast {
 
@@ -27,6 +28,7 @@ public:
     std::string_view identifier() const { return ident; }
 };
 
+
 class ScopedIdentifier {
     std::vector<Identifier> idents;
 
@@ -42,6 +44,7 @@ public:
 
     const std::vector<Identifier>& identifiers() const { return idents; }
 };
+
 
 class Import {
 
@@ -67,6 +70,7 @@ public:
     bool has_alias() const { return not tgt_name.empty(); }
 };
 
+
 class Invalid {
     std::string_view tok;
 
@@ -83,6 +87,7 @@ public:
     std::string_view token() const { return tok; }
 };
 
+
 class Empty {
 public:
     Empty() noexcept = default;
@@ -90,6 +95,68 @@ public:
     Empty& operator=(const Empty& other) = default;
     Empty& operator=(Empty&& other) = default;
 };
+
+
+class Expression {
+
+};
+
+
+class FunctionArg {
+
+public:
+
+    enum Type {
+        Mutable,
+        Const
+    };
+
+private:
+
+    [[maybe_unused]] std::optional<ast::Expression> arg_default;
+    ast::Identifier arg_name;
+    Type arg_type;
+
+public:
+
+    FunctionArg(ast::Identifier arg_name, Type arg_type) :
+        arg_default { std::nullopt },
+        arg_name { std::move(arg_name) },
+        arg_type { arg_type } { }
+        
+    FunctionArg(ast::Identifier arg_name, Type arg_type, ast::Expression default_val) :
+        arg_default { std::move(default_val) },
+        arg_name { std::move(arg_name) },
+        arg_type { arg_type } { }
+
+    FunctionArg(FunctionArg&& other) = default;
+
+    FunctionArg& operator=(const FunctionArg& other) = default;
+    FunctionArg& operator=(FunctionArg&& other) = default;
+
+    bool is_mutable() const { return arg_type == Type::Mutable; }
+    bool is_const() const { return arg_type == Type::Const; }
+
+    const ast::Identifier& identifier() const { return arg_name; }
+    std::string_view name() const { return arg_name.identifier(); }
+
+    bool has_default() const { return arg_default.has_value(); }
+    
+    const ast::Expression& default_val() const { return *arg_default; }
+};
+
+
+class FunctionDef {
+
+    ast::Identifier fn_name;
+    ast::Identifier fn_ret_type;
+
+public:
+
+    // TODO: Finish
+    FunctionDef(ast::Identifier);
+};
+
 
 using Statement = std::variant<Import, Invalid, Empty>;
 
