@@ -86,11 +86,18 @@ class Parser {
 
 
     Result parse_import();
+    Result parse_fn();
+
+    Result parse_expr();
+    Result parse_body();
+    Result parse_init();
+
     Result parse_empty();
     Result parse_invalid();
 
     static constexpr std::array top_level_parsers {
         &Parser::parse_import,
+        &Parser::parse_fn,
         &Parser::parse_empty,
         &Parser::parse_invalid,
     };

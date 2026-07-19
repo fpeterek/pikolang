@@ -32,6 +32,16 @@ bool is_as(const Token& token) {
         token.token() == "as";
 }
 
+bool is_pure(const Token& token) {
+    return token.type() == TokenType::Keyword and
+        token.token() == "pure";
+}
+
+bool is_fn(const Token& token) {
+    return token.type() == TokenType::Keyword and
+        token.token() == "fn";
+}
+
 bool is_identifier(const Token& token) {
     return token.type() == TokenType::Id;
 }
@@ -284,6 +294,28 @@ Result parse_import(parser::Context ctx) {
     return result;
 }
 
+Result parse_fn(parser::Context ctx) {
+    skip_empty(ctx);
+
+    bool pure = is_pure(ctx.token());
+
+    if (is_pure(ctx.token())) {
+        advance(ctx);
+        skip_spaces(ctx);
+    }
+
+    if (not is_fn(ctx.token()) and not pure) {
+        return Result { };
+    }
+
+
+    return Result { };
+}
+
+}
+
+Result Parser::parse_fn() {
+    return parser::parse_fn(create_context());
 }
 
 Result Parser::parse_import() {
