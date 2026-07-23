@@ -414,6 +414,7 @@ Result parse_fn(parser::Context ctx) {
     expect_open_paren(ctx, result);
 
     // TODO: Parse args
+    // parse_fn_args(ctx, result);
 
     expect_closed_paren(ctx, result);
 
@@ -423,7 +424,7 @@ Result parse_fn(parser::Context ctx) {
 
     skip_empty(ctx);
 
-    auto ret_type = parse_identifier(ctx, result);
+    auto ret_type = parse_scoped_identifier(ctx, result);
 
     skip_empty(ctx);
 
