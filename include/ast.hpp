@@ -1,8 +1,10 @@
 #ifndef AST_HPP
 #define AST_HPP
 
+#include <cstdint>
 #include <memory>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 #include <vector>
 #include <optional>
@@ -102,6 +104,140 @@ public:
 
 class If;
 class FnCall;
+class Literal;
+
+template<typename T>
+concept ExpressionType =
+    std::is_same_v<T, If> or
+    std::is_same_v<T, FnCall> or
+    std::is_same_v<T, Literal> or
+    std::is_same_v<T, ScopedIdentifier>;
+
+class Expression {
+
+    constexpr static uint64_t empty_tag = 0b0000;
+    constexpr static uint64_t if_tag    = 0b0001;
+    constexpr static uint64_t call_tag  = 0b0010;
+    constexpr static uint64_t lit_tag   = 0b0100;
+    constexpr static uint64_t id_tag    = 0b1000;
+
+    union Ptr {
+        std::monostate empty;
+        If* _if;
+        FnCall* call;
+        Literal* lit;
+        ScopedIdentifier* id;
+    };
+
+    Ptr ptr;
+    uint64_t tag = empty_tag;
+
+    void assign_from(const Expression& other);
+    void delete_data();
+
+public:
+
+    Expression() noexcept :
+        ptr { .empty = std::monostate {} } { }
+
+    Expression(const Expression& other);
+    Expression& operator=(const Expression& other);
+
+    Expression& operator=(Expression&& other) {
+        delete_data();
+
+        // Initialize union members explicitely to avoid any UB
+        if (holds<If>()) {
+            ptr._if = other.ptr._if;
+            tag = if_tag;
+        }
+        else if (holds<FnCall>()) {
+            ptr.call = other.ptr.call;
+            tag = call_tag;
+        }
+        else if (holds<Literal>()) {
+            ptr.lit = other.ptr.lit;
+            tag = lit_tag;
+        }
+        else if (holds<ScopedIdentifier>()) {
+            ptr.id = other.ptr.id;
+            tag = id_tag;
+        }
+
+        other.tag = empty_tag;
+        other.ptr.empty = std::monostate{};
+        
+        return *this;
+    }
+
+    Expression(Expression&& other) noexcept {
+        // Initialize union members explicitely to avoid any UB
+        if (holds<If>()) {
+            ptr._if = other.ptr._if;
+            tag = if_tag;
+        }
+        else if (holds<FnCall>()) {
+            ptr.call = other.ptr.call;
+            tag = call_tag;
+        }
+        else if (holds<Literal>()) {
+            ptr.lit = other.ptr.lit;
+            tag = lit_tag;
+        }
+        else if (holds<ScopedIdentifier>()) {
+            ptr.id = other.ptr.id;
+            tag = id_tag;
+        }
+
+        other.tag = empty_tag;
+        other.ptr.empty = std::monostate{};
+    }
+
+    Expression(If&& _if);
+    Expression(FnCall&& call);
+    Expression(Literal&& lit);
+    Expression(ScopedIdentifier&& id);
+
+    ~Expression();
+
+    template<ExpressionType T>
+    bool holds() const {
+        if constexpr (std::is_same_v<T, If>) {
+            return tag == if_tag;
+        }
+        if constexpr (std::is_same_v<T, FnCall>) {
+            return tag == call_tag;
+        }
+        if constexpr (std::is_same_v<T, Literal>) {
+            return tag == lit_tag;
+        }
+        if constexpr (std::is_same_v<T, ScopedIdentifier>) {
+            return tag == id_tag;
+        }
+    }
+
+    template<ExpressionType T>
+    const T& get() const {
+        if (not holds<T>()) {
+            throw std::bad_variant_access{};
+        }
+        if constexpr (std::is_same_v<T, If>) {
+            return *ptr._if;
+        }
+        if constexpr (std::is_same_v<T, FnCall>) {
+            return *ptr.call;
+        }
+        if constexpr (std::is_same_v<T, Literal>) {
+            return *ptr.lit;
+        }
+        if constexpr (std::is_same_v<T, ScopedIdentifier>) {
+            return *ptr.id;
+        }
+    }
+};
+
+// using Expression = std::variant<If, FnCall, Literal, ScopedIdentifier>;
+
 
 class Literal {
 public:
@@ -142,9 +278,6 @@ public:
 
 };
 
-// using Expression = std::variant<If, FnCall, Literal, ScopedIdentifier>;
-using Expression = std::variant<FnCall>;
-
 class If {
 
     std::unique_ptr<Expression> cond;
@@ -173,32 +306,23 @@ public:
             std::make_unique<Expression>(std::move(if_false))
         } { }
 
+    If(const If& other) :
+        cond { std::make_unique<Expression>(*other.cond) },
+        if_true { std::make_unique<Expression>(*other.if_true) },
+        if_false { std::make_unique<Expression>(*other.if_false) } { }
+
     If(If&& other) noexcept = default;
 
-    If(const If& other) :
-        cond { std::make_unique<Expression>(other.condition()) },
-        if_true { std::make_unique<Expression>(other.true_branch()) },
-        if_false { nullptr } {
-
-        if (other.has_else()) {
-            if_false = std::make_unique<Expression>(other.false_branch());
-        }
-    }
-
-    If& operator=(If&& other) noexcept = default;
-
     If& operator=(const If& other) {
-        cond = std::make_unique<Expression>(other.condition());
-        if_true = std::make_unique<Expression>(other.true_branch());
 
-        if (other.has_else()) {
-            if_false = std::make_unique<Expression>(other.false_branch());
-        } else {
-            if_false = nullptr;
-        }
+        cond = std::make_unique<Expression>(*other.cond);
+        if_true = std::make_unique<Expression>(*other.if_true);
+        if_false = std::make_unique<Expression>(*other.if_false);
 
         return *this;
     }
+
+    If& operator=(If&& other) noexcept = default;
 
     const Expression& condition() const { return *cond; }
     const Expression& true_branch() const { return *if_true; }
@@ -206,6 +330,7 @@ public:
 
     bool has_else() const { return if_false != nullptr; }
 };
+
 
 class FnCall {
 
@@ -293,7 +418,6 @@ public:
 
     Variable(Variable&& other) noexcept = default;
 
-    Variable& operator=(const Variable& other) = default;
     Variable& operator=(Variable&& other) noexcept = default;
 
     bool is_mutable() const { return var_type.is_mutable(); }
@@ -330,10 +454,8 @@ public:
         fn_body { std::move(body) } { }
 
     FunctionDef(FunctionDef&& other) noexcept = default;
-    FunctionDef(const FunctionDef& other) = default;
 
     FunctionDef& operator=(FunctionDef&& other) noexcept = default;
-    FunctionDef& operator=(const FunctionDef& other) = default;
 
     const Identifier& identifier() const { return fn_name; }
     std::string_view name() const { return fn_name.identifier(); }
@@ -363,7 +485,86 @@ public:
     const std::vector<Error>& errors() const { return errs; }
 };
 
+inline Expression::Expression(const Expression& other) {
+    assign_from(other);
+}
+
+inline Expression& Expression::operator=(const Expression& other) {
+    delete_data();
+    assign_from(other);
+
+    return *this;
+}
+
+inline void Expression::assign_from(const Expression& other) {
+
+    // Initialize union members explicitely to avoid any UB
+    if (other.holds<If>()) {
+        ptr._if = new If { *other.ptr._if };
+        tag = if_tag;
+    }
+    else if (other.holds<FnCall>()) {
+        ptr.call = new FnCall { *other.ptr.call };
+        tag = call_tag;
+    }
+    else if (other.holds<Literal>()) {
+        ptr.lit = new Literal { *other.ptr.lit };
+        tag = lit_tag;
+    }
+    else if (other.holds<ScopedIdentifier>()) {
+        ptr.id = new ScopedIdentifier { *other.ptr.id };
+        tag = id_tag;
+    }
+    
+}
+
+inline void Expression::delete_data() {
+    if (holds<If>()) {
+        delete ptr._if;
+    }
+    else if (holds<FnCall>()) {
+        delete ptr.call;
+    }
+    else if (holds<Literal>()) {
+        delete ptr.lit;
+    }
+    else if (holds<ScopedIdentifier>()) {
+        delete ptr.id;
+    }
+}
+
+inline Expression::~Expression() {
+    delete_data();
+}
+
+inline Expression::Expression(If&& _if) :
+    ptr { ._if = new If { std::move(_if) } },
+    tag { if_tag } { }
+
+inline Expression::Expression(FnCall&& call) :
+    ptr { .call = new FnCall { std::move(call) } },
+    tag { call_tag } { }
+
+inline Expression::Expression(Literal&& lit) :
+    ptr { .lit = new Literal { std::move(lit) } },
+    tag { lit_tag } { }
+
+inline Expression::Expression(ScopedIdentifier&& id) :
+    ptr { .id = new ScopedIdentifier { std::move(id) } },
+    tag { id_tag } { }
 
 } // namespace ast
+
+namespace std {
+    template<ast::ExpressionType T>
+    bool holds_alternative(const ast::Expression& expr) {
+        return expr.holds<T>();
+    }
+
+    template<ast::ExpressionType T>
+    const T& get(const ast::Expression& expr) {
+        return expr.get<T>();
+    }
+} // namespace std
 
 #endif // AST_HPP
