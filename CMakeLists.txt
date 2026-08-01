@@ -14,6 +14,9 @@ include_directories(
 
 add_executable(
     pikoc
+
+    src/ast/expression.cpp
+
     src/errors.cpp
     src/files.cpp
     src/main.cpp
