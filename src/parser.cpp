@@ -6,6 +6,10 @@
 #include <print>
 
 #include "ast.hpp"
+#include "ast/data_type.hpp"
+#include "ast/function_def.hpp"
+#include "ast/scoped_identifier.hpp"
+#include "ast/variable.hpp"
 #include "colors.hpp"
 #include "token.hpp"
 #include "language.hpp"
@@ -21,6 +25,14 @@ namespace ops = language::operators;
 
 bool is_space(const Token& token) {
     return token.type() == TokenType::Space;
+}
+
+bool is_sep(const Token& token) {
+    return token.type() == TokenType::Sep;
+}
+
+bool is_type_separator(const Token& token) {
+    return token.type() == TokenType::TypeDecl;
 }
 
 bool is_newline(const Token& token) {
@@ -158,6 +170,20 @@ void expect_assignment(parser::Context& ctx, Result& result) {
     advance(ctx);
 }
 
+void expect_type_separator(parser::Context& ctx, Result& result) {
+    if (not is_type_separator(ctx.token())) {
+        result.add_error(
+            std::format("Invalid token '{}', '=' expected", ctx.token().token()),
+            ctx.filename,
+            ctx.token().source()
+        );
+
+        return;
+    }
+
+    advance(ctx);
+}
+
 void skip_import_keyword(parser::Context& ctx) {
     advance(ctx);
 }
@@ -165,6 +191,7 @@ void skip_import_keyword(parser::Context& ctx) {
 void skip_fn_keyword(parser::Context& ctx) {
     advance(ctx);
 }
+
 
 std::optional<ast::Identifier> parse_identifier(parser::Context& ctx, Result& result) {
 
@@ -188,6 +215,7 @@ std::optional<ast::Identifier> parse_identifier(parser::Context& ctx, Result& re
     };
 }
 
+
 bool parse_scope_operator(parser::Context& ctx, Result& result) {
     skip_spaces(ctx);
 
@@ -206,6 +234,7 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
 
     return true;
 }
+
 
 std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Result& result) {
     skip_spaces(ctx);
@@ -253,6 +282,7 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
     };
 }
 
+
 std::optional<ast::Identifier> parse_as(parser::Context& ctx, Result& res) {
     skip_spaces(ctx);
 
@@ -265,6 +295,7 @@ std::optional<ast::Identifier> parse_as(parser::Context& ctx, Result& res) {
 
     return parse_identifier(ctx, res);
 }
+
 
 Result parse_empty(parser::Context ctx) {
     Result result {
@@ -282,6 +313,7 @@ Result parse_empty(parser::Context ctx) {
 
     return result;
 }
+
 
 Result parse_invalid(parser::Context ctx) {
     ast::Invalid invalid { ctx.token().token() };
@@ -316,6 +348,7 @@ Result parse_invalid(parser::Context ctx) {
 
     return result;
 }
+
 
 Result parse_import(parser::Context ctx) {
     skip_empty(ctx);
@@ -375,9 +408,70 @@ Result parse_import(parser::Context ctx) {
     return result;
 }
 
+
 std::optional<ast::Expression> parse_expression(parser::Context& ctx, Result& result) {
     return std::nullopt;
 }
+
+
+std::optional<ast::DataType> parse_data_type(parser::Context& ctx, Result& result) {
+    // return parse_scoped_identifier(ctx, result);
+    return std::nullopt;
+}
+
+
+std::vector<ast::Variable> parse_fn_args(parser::Context ctx, Result& result) {
+
+    skip_empty(ctx);
+
+    if (is_closed_paren(ctx.token())) {
+        return {};
+    }
+
+    std::vector<ast::Variable> args;
+
+    while (true) {
+
+        skip_empty(ctx);
+        auto ident = parse_identifier(ctx, result);
+        skip_empty(ctx);
+
+        expect_type_separator(ctx, result);
+        skip_empty(ctx);
+
+        auto type = parse_data_type(ctx, result);
+
+        if (ident.has_value() and type.has_value()) {
+            args.emplace_back(std::move(*ident), std::move(*type));
+        }
+
+        skip_empty(ctx);
+
+        if (is_closed_paren(ctx.token())) {
+            break;
+        }
+
+        bool has_comma = false;
+        if (is_sep(ctx.token())) {
+            has_comma = true;
+            advance(ctx);
+        }
+        skip_empty(ctx);
+
+        if (is_closed_paren(ctx.token())) {
+            break;
+        } else if (has_comma) {
+            result.add_error(
+                std::format("Invalid token '{}', ',' expected", ctx.token().token()),
+                ctx.filename,
+                ctx.token().source()
+            );
+        }
+    }
+
+    return args;
+}
+
 
 Result parse_fn(parser::Context ctx) {
     skip_empty(ctx);
@@ -413,8 +507,7 @@ Result parse_fn(parser::Context ctx) {
 
     expect_open_paren(ctx, result);
 
-    // TODO: Parse args
-    // parse_fn_args(ctx, result);
+    auto args = parse_fn_args(ctx, result);
 
     expect_closed_paren(ctx, result);
 
@@ -424,7 +517,7 @@ Result parse_fn(parser::Context ctx) {
 
     skip_empty(ctx);
 
-    auto ret_type = parse_scoped_identifier(ctx, result);
+    auto ret_type = parse_data_type(ctx, result);
 
     skip_empty(ctx);
 
@@ -434,26 +527,41 @@ Result parse_fn(parser::Context ctx) {
 
     auto body = parse_expression(ctx, result);
 
+    if (fn_name.has_value() and ret_type.has_value() and body.has_value()) {
+        result.statement = ast::FunctionDef {
+            std::move(*fn_name),
+            std::move(*ret_type),
+            std::move(args),
+            std::move(*body)
+        };
+    }
+
     return result;
 }
 
+
 }
+
 
 Result Parser::parse_fn() {
     return parser::parse_fn(create_context());
 }
 
+
 Result Parser::parse_import() {
     return parser::parse_import(create_context());
 }
+
 
 Result Parser::parse_empty() {
     return parser::parse_empty(create_context());
 }
 
+
 Result Parser::parse_invalid() {
     return parser::parse_invalid(create_context());
 }
+
 
 Context Parser::create_context() {
     return Context {
@@ -462,6 +570,7 @@ Context Parser::create_context() {
         end(),
     };
 }
+
 
 void Parser::process_result(Result& result) {
     if (not result.has_statement()) {
@@ -478,6 +587,7 @@ void Parser::process_result(Result& result) {
 
     current = result.next;
 }
+
 
 ast::AST Parser::parse() {
 

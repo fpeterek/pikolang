@@ -24,8 +24,8 @@ public:
         var_type { arg_type },
         var_name { std::move(arg_name) } { }
         
-    Variable(Identifier arg_name, DataType arg_type, Expression default_val) :
-        initial_val { std::move(default_val) },
+    Variable(Identifier arg_name, DataType arg_type, Expression initial_val) :
+        initial_val { std::move(initial_val) },
         var_type { arg_type },
         var_name { std::move(arg_name) } { }
 
