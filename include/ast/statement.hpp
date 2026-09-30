@@ -16,6 +16,7 @@ namespace ast {
 
 using Statement =
     std::variant<
+        std::monostate,
         Import,
         Invalid,
         Empty,

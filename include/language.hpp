@@ -38,6 +38,8 @@ constexpr std::array brace_chars {
 
 namespace operators {
     constexpr std::string_view member_access = "::";
+    constexpr std::string_view pointer = "*";
+    constexpr std::string_view reference = "&";
 }
 
 namespace keywords {
@@ -55,6 +57,7 @@ namespace keywords {
     constexpr std::string_view _break     = "break";
     constexpr std::string_view _continue  = "continue";
     constexpr std::string_view _return    = "return";
+    constexpr std::string_view mut        = "mut";
 }
 
 static constexpr std::array keywords_array = {
@@ -72,6 +75,7 @@ static constexpr std::array keywords_array = {
     keywords::_break,
     keywords::_continue,
     keywords::_return,
+    keywords::mut,
 };
 
 }

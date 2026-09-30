@@ -6,7 +6,6 @@
 #include <variant>
 
 #include "ast/scoped_identifier.hpp"
-#include "ast/scoped_identifier.hpp"
 
 
 namespace ast {
@@ -30,11 +29,12 @@ concept ExpressionType =
 
 class Expression {
 
-    constexpr static uint64_t empty_tag = 0b0000;
-    constexpr static uint64_t if_tag    = 0b0001;
-    constexpr static uint64_t call_tag  = 0b0010;
-    constexpr static uint64_t lit_tag   = 0b0100;
-    constexpr static uint64_t id_tag    = 0b1000;
+    constexpr static uint64_t empty_tag = 0b00000;
+    constexpr static uint64_t if_tag    = 0b00001;
+    constexpr static uint64_t call_tag  = 0b00010;
+    constexpr static uint64_t lit_tag   = 0b00100;
+    constexpr static uint64_t id_tag    = 0b01000;
+    constexpr static uint64_t body_tag  = 0b10000;
 
     union Ptr {
         std::monostate empty;

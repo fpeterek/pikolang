@@ -30,6 +30,11 @@ private:
 
 public:
 
+    DataType(ScopedIdentifier id, Mut mut, Ref ref) :
+        type_name { std::move(id) },
+        mut { mut },
+        ref { ref } { }
+
     DataType(const DataType& other) = default;
     DataType(DataType&& other) noexcept = default;
 

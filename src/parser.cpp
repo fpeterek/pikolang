@@ -75,6 +75,21 @@ bool is_fn(const Token& token) {
         token.token() == kwd::fn;
 }
 
+bool is_mut(const Token& token) {
+    return token.type() == TokenType::Keyword and
+        token.token() == kwd::mut;
+}
+
+bool is_ptr(const Token& token) {
+    return token.type() == TokenType::Operator and
+        token.token() == ops::pointer;
+}
+
+bool is_ref(const Token& token) {
+    return token.type() == TokenType::Operator and
+        token.token() == ops::reference;
+}
+
 bool is_identifier(const Token& token) {
     return token.type() == TokenType::Id;
 }
@@ -237,7 +252,7 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
 
 
 std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ctx, Result& result) {
-    skip_spaces(ctx);
+    skip_empty(ctx);
 
     if (not is_identifier(ctx.token())) {
 
@@ -410,13 +425,46 @@ Result parse_import(parser::Context ctx) {
 
 
 std::optional<ast::Expression> parse_expression(parser::Context& ctx, Result& result) {
+
+
+
     return std::nullopt;
 }
 
 
 std::optional<ast::DataType> parse_data_type(parser::Context& ctx, Result& result) {
-    // return parse_scoped_identifier(ctx, result);
-    return std::nullopt;
+
+    skip_empty(ctx);
+
+    ast::DataType::Mut mut = ast::DataType::Mut::Const;
+
+    if (is_mut(ctx.token())) {
+        mut = ast::DataType::Mut::Mutable;
+        advance(ctx);
+    }
+
+    auto id = parse_scoped_identifier(ctx, result);
+
+    if (not id) {
+        return std::nullopt;
+    }
+
+    ast::DataType::Ref ref = ast::DataType::Ref::Value;
+
+    // No space allowed
+    if (is_ptr(ctx.token())) {
+        ref = ast::DataType::Ref::Pointer;
+        advance(ctx);
+    } else if (is_ref(ctx.token())) {
+        ref = ast::DataType::Ref::Reference;
+        advance(ctx);
+    }
+
+    return ast::DataType {
+        std::move(*id),
+        mut,
+        ref
+    };
 }
 
 
