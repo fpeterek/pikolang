@@ -3,43 +3,10 @@
 #include "ast/if.hpp"
 #include "ast/fn_call.hpp"
 #include "ast/literal.hpp"
+#include "ast/body.hpp"
 
 
 namespace ast {
-
-
-Expression::Expression(const Expression& other) {
-    assign_from(other);
-}
-
-Expression& Expression::operator=(const Expression& other) {
-    delete_data();
-    assign_from(other);
-
-    return *this;
-}
-
-void Expression::assign_from(const Expression& other) {
-
-    // Initialize union members explicitely to avoid any UB
-    if (other.holds<If>()) {
-        ptr._if = new If { *other.ptr._if };
-        tag = if_tag;
-    }
-    else if (other.holds<FnCall>()) {
-        ptr.call = new FnCall { *other.ptr.call };
-        tag = call_tag;
-    }
-    else if (other.holds<Literal>()) {
-        ptr.lit = new Literal { *other.ptr.lit };
-        tag = lit_tag;
-    }
-    else if (other.holds<ScopedIdentifier>()) {
-        ptr.id = new ScopedIdentifier { *other.ptr.id };
-        tag = id_tag;
-    }
-    
-}
 
 void Expression::delete_data() {
     if (holds<If>()) {
@@ -53,6 +20,9 @@ void Expression::delete_data() {
     }
     else if (holds<ScopedIdentifier>()) {
         delete ptr.id;
+    }
+    else if (holds<Body>()) {
+        delete ptr.body;
     }
 }
 
@@ -76,5 +46,8 @@ inline Expression::Expression(ScopedIdentifier&& id) :
     ptr { .id = new ScopedIdentifier { std::move(id) } },
     tag { id_tag } { }
 
+inline Expression::Expression(Body&& body) :
+    ptr { .body = new Body { std::move(body) } },
+    tag { id_tag } { }
 
 }  // namespace ast

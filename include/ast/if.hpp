@@ -37,21 +37,7 @@ public:
             std::make_unique<Expression>(std::move(if_false))
         } { }
 
-    If(const If& other) :
-        cond { std::make_unique<Expression>(*other.cond) },
-        if_true { std::make_unique<Expression>(*other.if_true) },
-        if_false { std::make_unique<Expression>(*other.if_false) } { }
-
     If(If&& other) noexcept = default;
-
-    If& operator=(const If& other) {
-
-        cond = std::make_unique<Expression>(*other.cond);
-        if_true = std::make_unique<Expression>(*other.if_true);
-        if_false = std::make_unique<Expression>(*other.if_false);
-
-        return *this;
-    }
 
     If& operator=(If&& other) noexcept = default;
 

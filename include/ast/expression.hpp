@@ -14,6 +14,7 @@ namespace ast {
 class If;
 class FnCall;
 class Literal;
+class Body;
 
 
 template<typename T>
@@ -21,7 +22,8 @@ concept ExpressionType =
     std::is_same_v<T, If> or
     std::is_same_v<T, FnCall> or
     std::is_same_v<T, Literal> or
-    std::is_same_v<T, ScopedIdentifier>;
+    std::is_same_v<T, ScopedIdentifier> or
+    std::is_same_v<T, Body>;
 
 
 // using Expression = std::variant<If, FnCall, Literal, ScopedIdentifier>;
@@ -42,21 +44,18 @@ class Expression {
         FnCall* call;
         Literal* lit;
         ScopedIdentifier* id;
+        Body* body;
     };
 
     Ptr ptr;
     uint64_t tag = empty_tag;
 
-    void assign_from(const Expression& other);
     void delete_data();
 
 public:
 
     Expression() noexcept :
         ptr { .empty = std::monostate {} } { }
-
-    Expression(const Expression& other);
-    Expression& operator=(const Expression& other);
 
     Expression& operator=(Expression&& other) {
         delete_data();
@@ -112,6 +111,7 @@ public:
     Expression(FnCall&& call);
     Expression(Literal&& lit);
     Expression(ScopedIdentifier&& id);
+    Expression(Body&& body);
 
     ~Expression();
 
@@ -128,6 +128,9 @@ public:
         }
         if constexpr (std::is_same_v<T, ScopedIdentifier>) {
             return tag == id_tag;
+        }
+        if constexpr (std::is_same_v<T, Body>) {
+            return tag == body_tag;
         }
     }
 
