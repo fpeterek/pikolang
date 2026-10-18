@@ -1,5 +1,7 @@
 #include "allocator.hpp"
 
+#include <print>
+
 
 int main() {
     Allocator allocator;
