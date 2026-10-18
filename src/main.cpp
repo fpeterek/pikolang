@@ -2,7 +2,6 @@
 #include <print>
 #include <string_view>
 
-#include "allocator.hpp"
 #include "colors.hpp"
 #include "errors.hpp"
 #include "files.hpp"

@@ -3,8 +3,6 @@
 
 #include <bit>
 #include <cstddef>
-#include <memory>
-#include <print>
 #include <stdexcept>
 #include <type_traits>
 #include <new>
@@ -85,12 +83,6 @@ public:
         if (rem > 0) {
             skip = alignment - rem;
         }
-
-        std::println("current {}", integral);
-        std::println("aligning to {}", alignment);
-        std::println("remainder {}", rem);
-        std::println("skip {}", skip);
-        std::println("final address {}", reinterpret_cast<void*>(end + skip));
 
         return end + skip;
     }
