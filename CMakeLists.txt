@@ -24,4 +24,12 @@ add_executable(
     src/print_ast.cpp
     src/print_tokens.cpp
     src/tokenizer.cpp
+    src/allocator.cpp
+)
+
+add_executable(
+    allocator_test
+
+    src/test/allocator_test.cpp
+    src/allocator.cpp
 )

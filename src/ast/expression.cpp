@@ -26,27 +26,27 @@ void Expression::delete_data() {
     }
 }
 
-inline Expression::~Expression() {
+Expression::~Expression() {
     delete_data();
 }
 
-inline Expression::Expression(If&& _if) :
+Expression::Expression(If&& _if) :
     ptr { ._if = new If { std::move(_if) } },
     tag { if_tag } { }
 
-inline Expression::Expression(FnCall&& call) :
+Expression::Expression(FnCall&& call) :
     ptr { .call = new FnCall { std::move(call) } },
     tag { call_tag } { }
 
-inline Expression::Expression(Literal&& lit) :
+Expression::Expression(Literal&& lit) :
     ptr { .lit = new Literal { std::move(lit) } },
     tag { lit_tag } { }
 
-inline Expression::Expression(ScopedIdentifier&& id) :
+Expression::Expression(ScopedIdentifier&& id) :
     ptr { .id = new ScopedIdentifier { std::move(id) } },
     tag { id_tag } { }
 
-inline Expression::Expression(Body&& body) :
+Expression::Expression(Body&& body) :
     ptr { .body = new Body { std::move(body) } },
     tag { id_tag } { }
 

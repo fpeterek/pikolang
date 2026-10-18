@@ -2,6 +2,7 @@
 #include <print>
 #include <string_view>
 
+#include "allocator.hpp"
 #include "colors.hpp"
 #include "errors.hpp"
 #include "files.hpp"
@@ -65,6 +66,7 @@ void run(const Args& args) {
     print_ast(ast);
 
 }
+
 
 
 int main(int argc, const char* argv[]) {
