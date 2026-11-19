@@ -2,6 +2,7 @@
 #define PARSER_HPP
 
 #include <array>
+#include <ranges>
 #include <string_view>
 
 #include "allocator.hpp"
@@ -67,11 +68,11 @@ struct Result {
 
 class Parser {
 
-    Allocator allocator;
     std::vector<Error> errors;
     std::vector<ast::Statement> statements;
     iterator current;
     const Tokenized& tokenized;
+    Allocator& allocator;
 
     Context create_context();
     void process_result(Result& result);
@@ -81,9 +82,10 @@ class Parser {
 
     iterator end() { return tokens().end(); };
     
-    Parser(const Tokenized& tokenized) :
+    Parser(const Tokenized& tokenized, Allocator& allocator) :
         current { tokenized.tokens().begin() },
-        tokenized { tokenized }
+        tokenized { tokenized },
+        allocator { allocator }
         { }
 
 
@@ -108,7 +110,7 @@ class Parser {
 
 public:
 
-    static ast::AST parse(const Tokenized& tokenized);
+    static ast::AST parse(const Tokenized& tokenized, Allocator& allocator);
 
 };
 

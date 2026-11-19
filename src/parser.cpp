@@ -6,6 +6,7 @@
 #include <vector>
 #include <print>
 
+#include "allocator.hpp"
 #include "ast/data_type.hpp"
 #include "ast/function_def.hpp"
 #include "ast/identifier.hpp"
@@ -730,8 +731,8 @@ ast::AST Parser::parse() {
 }
 
 
-ast::AST Parser::parse(const Tokenized& tokenized) {
-    Parser parser { tokenized };   
+ast::AST Parser::parse(const Tokenized& tokenized, Allocator& allocator) {
+    Parser parser { tokenized, allocator };
 
     return parser.parse();
 }

@@ -2,6 +2,7 @@
 #include <print>
 #include <string_view>
 
+#include "allocator.hpp"
 #include "colors.hpp"
 #include "errors.hpp"
 #include "files.hpp"
@@ -56,7 +57,9 @@ void run(const Args& args) {
     print_tokens(tokenized.tokens());
 
     std::println("{}Parsing...{}", colors::gray, colors::standard);
-    auto ast = parser::Parser::parse(tokenized);
+
+    Allocator allocator { };
+    auto ast = parser::Parser::parse(tokenized, allocator);
 
     if (not ast.errors().empty()) {
         ErrorPrinter::print_errors(ast.errors(), files);
