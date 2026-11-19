@@ -16,13 +16,6 @@ public:
     Body(Array<ast::Statement> statements) :
         statements { std::move(statements) } { }
 
-
-    Body(const Body& other) = default;
-    Body(Body&& other) noexcept = default;
-
-    Body& operator=(const Body& other) = default;
-    Body& operator=(Body&& other) noexcept = default;
-
     const Array<ast::Statement>& body() const { return statements; }
 };
 

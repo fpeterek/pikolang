@@ -25,10 +25,6 @@ public:
         if_false { std::move(if_false) } { }
 
 
-    If(If&& other) noexcept = default;
-
-    If& operator=(If&& other) noexcept = default;
-
     Expression condition() const { return cond; }
     Expression true_branch() const { return if_true; }
     Expression false_branch() const { return if_false; }

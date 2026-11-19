@@ -21,11 +21,11 @@ public:
         capacity { capacity } { }
 
 
-    static Array<T>& create(Allocator& allocator, size_t size) {
+    static Array<T> create(Allocator& allocator, size_t size) {
         T* begin = allocator.allocate<T>(size);
         T* capacity = begin + size;
 
-        return allocator.create<Array<T>>(begin, capacity);
+        return Array<T> { begin, capacity };
     }
 
     bool is_full() const {

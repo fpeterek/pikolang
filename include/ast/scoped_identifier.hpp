@@ -16,11 +16,6 @@ public:
         idents { std::move(identifiers) }
         { }
 
-    ScopedIdentifier(const ScopedIdentifier& other) = default;
-    ScopedIdentifier(ScopedIdentifier&& other) noexcept = default;
-
-    ScopedIdentifier& operator=(const ScopedIdentifier& other) = default;
-    ScopedIdentifier& operator=(ScopedIdentifier&& other) noexcept = default;
 
     const Array<Identifier>& identifiers() const { return idents; }
 };

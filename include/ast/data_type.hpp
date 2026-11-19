@@ -35,12 +35,6 @@ public:
         mut { mut },
         ref { ref } { }
 
-    DataType(const DataType& other) = default;
-    DataType(DataType&& other) noexcept = default;
-
-    DataType& operator=(const DataType& other) = default;
-    DataType& operator=(DataType&& other) noexcept = default;
-
     const ScopedIdentifier& type() const {
         return type_name;
     }

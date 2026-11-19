@@ -16,12 +16,6 @@ public:
         ident { identifier }
         { }
 
-    Identifier(const Identifier& other) = default;
-    Identifier(Identifier&& other) noexcept = default;
-
-    Identifier& operator=(const Identifier& other) = default;
-    Identifier& operator=(Identifier&& other) noexcept = default;
-
     std::string_view identifier() const { return ident; }
 };
 

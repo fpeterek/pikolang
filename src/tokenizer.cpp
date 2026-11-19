@@ -57,10 +57,12 @@ bool is_float_begin(const char c) {
     return is_integer_begin(c) or c == '.';
 }
 
+[[maybe_unused]]
 bool is_integer_char(const char c) {
     return is_integer_begin(c) or std::isalpha(c) or c == '#' or c == '_';
 }
 
+[[maybe_unused]]
 bool is_float_char(const char c) {
     return is_float_begin(c) or c == 'e' or c == '_';
 }

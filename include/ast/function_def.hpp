@@ -1,8 +1,6 @@
 #ifndef AST_FUNTION_DEF_HPP
 #define AST_FUNTION_DEF_HPP
 
-#include <vector>
-
 #include "ast/identifier.hpp"
 #include "ast/data_type.hpp"
 #include "ast/expression.hpp"
@@ -29,9 +27,6 @@ public:
         args { std::move(args) },
         fn_body { std::move(body) } { }
 
-    FunctionDef(FunctionDef&& other) noexcept = default;
-
-    FunctionDef& operator=(FunctionDef&& other) noexcept = default;
 
     const Identifier& identifier() const { return fn_name; }
     std::string_view name() const { return fn_name.identifier(); }

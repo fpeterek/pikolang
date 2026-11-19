@@ -31,11 +31,6 @@ public:
 
     Literal() noexcept = default;
 
-    Literal(Literal&& other) noexcept = default;
-    Literal(const Literal& other) = default;
-
-    Literal& operator=(Literal&& other) noexcept = default;
-    Literal& operator=(const Literal& other) = default;
 
     Type type() const { return lit_type; };
     bool is_char() const { return lit_type == Char; }

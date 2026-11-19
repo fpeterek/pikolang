@@ -23,10 +23,6 @@ public:
         cond { other.cond },
         body { other.body } { }
 
-    While(While&& other) noexcept = default;
-
-    While& operator=(const While& other) = default;
-    While& operator=(While&& other) noexcept = default;
 
     Expression condition() const { return cond; }
     Body loop_body() const { return body; }

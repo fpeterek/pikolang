@@ -6,11 +6,13 @@
 #include <vector>
 #include <print>
 
-#include "ast.hpp"
 #include "ast/data_type.hpp"
 #include "ast/function_def.hpp"
+#include "ast/identifier.hpp"
 #include "ast/scoped_identifier.hpp"
+#include "ast/statement.hpp"
 #include "ast/variable.hpp"
+#include "collections/array.hpp"
 #include "collections/string.hpp"
 #include "colors.hpp"
 #include "token.hpp"
@@ -329,9 +331,13 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
         identifiers.emplace_back(std::move(*member));
     }
 
-    return ast::ScopedIdentifier {
-        std::move(identifiers)
-    };
+    auto array = Array<ast::Identifier>::create(ctx.allocator, identifiers.size());
+
+    for (auto& id : identifiers) {
+        array.append(id);
+    }
+
+    return ast::ScopedIdentifier { array };
 }
 
 
@@ -466,7 +472,8 @@ Result parse_import(parser::Context ctx) {
 
 std::optional<ast::Expression> parse_expression(parser::Context& ctx, Result& result) {
 
-
+    (void)ctx;
+    (void)result;
 
     return std::nullopt;
 }
@@ -621,10 +628,17 @@ Result parse_fn(parser::Context ctx) {
     auto body = parse_expression(ctx, result);
 
     if (fn_name.has_value() and ret_type.has_value() and body.has_value()) {
+
+        auto args_arr = Array<ast::Variable>::create(ctx.allocator, args.size());
+
+        for (auto& arg : args) {
+            args_arr.append(arg);
+        }
+
         result.statement = ast::FunctionDef {
             std::move(*fn_name),
             std::move(*ret_type),
-            std::move(args),
+            std::move(args_arr),
             std::move(*body)
         };
     }
@@ -697,9 +711,21 @@ ast::AST Parser::parse() {
         }
     }
 
+    auto statement_arr = Array<ast::Statement>::create(allocator, statements.size());
+
+    for (auto& st : statements) {
+        statement_arr.append(st);
+    }
+
+    auto error_arr = Array<Error>::create(allocator, errors.size());
+
+    for (auto& err : errors) {
+        error_arr.append(err);
+    }
+
     return ast::AST {
-        std::move(statements),
-        std::move(errors)
+        statement_arr,
+        error_arr,
     };
 }
 

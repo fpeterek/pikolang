@@ -15,11 +15,6 @@ public:
     Invalid(std::string_view token) :
         tok { token } { }
 
-    Invalid(Invalid&& other) noexcept = default;
-
-    Invalid& operator=(const Invalid& other) = default;
-    Invalid& operator=(Invalid&& other) noexcept = default;
-
     std::string_view token() const { return tok; }
 };
 

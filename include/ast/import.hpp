@@ -22,10 +22,6 @@ public:
         tgt { std::move(target) },
         tgt_name { as } { }
 
-    Import(Import&& other) noexcept = default;
-
-    Import& operator=(const Import& other) = default;
-    Import& operator=(Import&& other) noexcept = default;
 
     std::string_view language() const { return lang; }
     const ScopedIdentifier& target() const { return tgt; }

@@ -30,9 +30,6 @@ public:
         var_type { arg_type },
         var_name { std::move(arg_name) } { }
 
-    Variable(Variable&& other) noexcept = default;
-
-    Variable& operator=(Variable&& other) noexcept = default;
 
     bool is_mutable() const { return var_type.is_mutable(); }
     bool is_const() const { return var_type.is_mutable(); }

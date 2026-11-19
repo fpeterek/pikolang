@@ -20,12 +20,6 @@ public:
         fn { std::move(id) },
         args { std::move(args) } { }
 
-    FnCall(FnCall&& other) noexcept = default;
-    FnCall(const FnCall& other) noexcept = default;
-
-    FnCall& operator=(FnCall&& other) noexcept = default;
-    FnCall& operator=(const FnCall& other) noexcept = default;
-
     const ScopedIdentifier& function() const { return fn; }
     const Array<Expression>& arguments() const { return args; }
 };

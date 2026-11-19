@@ -5,12 +5,7 @@
 namespace ast {
 
 
-class Empty {
-public:
-    Empty() noexcept = default;
-    Empty(Empty&& other) noexcept = default;
-    Empty& operator=(const Empty& other) = default;
-    Empty& operator=(Empty&& other) noexcept = default;
+struct Empty {
 };
 
 
