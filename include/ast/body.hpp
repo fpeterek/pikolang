@@ -2,19 +2,18 @@
 #define AST_BODY_HPP
 
 #include "ast/statement.hpp"
+#include "collections/array.hpp"
 
 
 namespace  ast {
 
 class Body {
 
-    std::vector<ast::Statement> statements;
+    Array<ast::Statement> statements;
 
 public:
 
-    Body() noexcept = default;
-
-    Body(std::vector<ast::Statement> statements) :
+    Body(Array<ast::Statement> statements) :
         statements { std::move(statements) } { }
 
 
@@ -24,7 +23,7 @@ public:
     Body& operator=(const Body& other) = default;
     Body& operator=(Body&& other) noexcept = default;
 
-    const std::vector<ast::Statement>& body() const { return statements; }
+    const Array<ast::Statement>& body() const { return statements; }
 };
 
 

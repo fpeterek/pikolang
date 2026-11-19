@@ -1,27 +1,27 @@
 #ifndef ERRORS_HPP
 #define ERRORS_HPP
 
-#include <string>
-#include <vector>
+#include <string_view>
 
+#include "collections/array.hpp"
 #include "files.hpp"
 #include "source_position.hpp"
 
 
 class Error {
 
-    std::string msg;
+    std::string_view msg;
     std::string_view src_file;
     SourcePosition src_pos;
 
 public:
 
-    Error(std::string msg, std::string_view file, SourcePosition pos) :
-        msg { std::move(msg) },
+    Error(std::string_view msg, std::string_view file, SourcePosition pos) :
+        msg { msg },
         src_file { file },
         src_pos { std::move(pos) } {  }
 
-    const std::string& message() const {
+    std::string_view message() const {
         return msg;
     }
     
@@ -43,7 +43,7 @@ class ErrorPrinter {
 public:
 
     static void print_errors(
-        const std::vector<Error>& errors,
+        const Array<Error>& errors,
         const Files& files);
 
 };

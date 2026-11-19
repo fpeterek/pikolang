@@ -1,7 +1,8 @@
 #ifndef AST_VARIABLE_HPP
 #define AST_VARIABLE_HPP
 
-#include <optional>
+#include <utility>
+#include <variant>
 
 #include "ast/identifier.hpp"
 #include "ast/expression.hpp"
@@ -13,14 +14,14 @@ namespace ast {
 
 class Variable {
 
-    std::optional<Expression> initial_val;
+    Expression initial_val;
     DataType var_type;
     Identifier var_name;
 
 public:
 
     Variable(Identifier arg_name, DataType arg_type) :
-        initial_val { std::nullopt },
+        initial_val { std::monostate { } },
         var_type { arg_type },
         var_name { std::move(arg_name) } { }
         
@@ -41,12 +42,12 @@ public:
     bool is_referential() const { return var_type.is_referential(); }
     bool is_value() const { return var_type.is_value(); }
 
-    const Identifier& identifier() const { return var_name; }
+    Identifier identifier() const { return var_name; }
     std::string_view name() const { return var_name.identifier(); }
 
-    bool has_initial() const { return initial_val.has_value(); }
+    bool has_initial() const { return std::holds_alternative<std::monostate>(initial_val); }
     
-    const Expression& initial_value() const { return *initial_val; }
+    Expression initial_value() const { return initial_val; }
 };
 
 

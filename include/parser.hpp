@@ -5,6 +5,7 @@
 #include <optional>
 #include <string_view>
 
+#include "allocator.hpp"
 #include "colors.hpp"
 #include "tokenizer.hpp"
 #include "errors.hpp"
@@ -18,6 +19,7 @@ using iterator = Tokenized::const_iterator;
 
 
 struct Context {
+    Allocator& allocator;
     std::string_view filename;
     iterator current;
     iterator end;
@@ -66,6 +68,7 @@ struct Result {
 
 class Parser {
 
+    Allocator allocator;
     std::vector<Error> errors;
     std::vector<ast::Statement> statements;
     iterator current;

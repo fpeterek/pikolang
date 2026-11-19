@@ -1,4 +1,5 @@
 #include "errors.hpp"
+#include "collections/array.hpp"
 #include "source_position.hpp"
 
 #include <algorithm>
@@ -196,7 +197,7 @@ void print_error(const Error& error, const Files& files) {
 } // namespace
 
 void ErrorPrinter::print_errors(
-        const std::vector<Error>& errors,
+        const Array<Error>& errors,
         const Files& files) {
 
     for (auto& error : errors) {

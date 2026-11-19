@@ -9,7 +9,7 @@
 
 
 struct OutOfMemory : std::runtime_error {
-    OutOfMemory() noexcept : std::runtime_error( "out of memory") { }
+    OutOfMemory() noexcept : std::runtime_error("out of memory") { }
 };
 
 struct FailedToAllocateMemory : std::runtime_error {
@@ -109,7 +109,9 @@ public:
     T& create(Args&& ...args) {
         T* memory = allocate<T>(1);
 
-        new(memory) T { std::forward<Args...>(args...) };
+        T* t = new(memory) T { std::forward<Args...>(args...) };
+
+        return *t;
     }
 
 };

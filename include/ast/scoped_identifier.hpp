@@ -1,19 +1,18 @@
 #ifndef AST_SCOPED_IDENTIFIER_HPP
 #define AST_SCOPED_IDENTIFIER_HPP
 
-#include <vector>
-
 #include "ast/identifier.hpp"
+#include "collections/array.hpp"
 
 
 namespace ast {
 
 
 class ScopedIdentifier {
-    std::vector<Identifier> idents;
+    Array<Identifier> idents;
 
 public:
-    ScopedIdentifier(std::vector<Identifier> identifiers) :
+    ScopedIdentifier(Array<Identifier> identifiers) :
         idents { std::move(identifiers) }
         { }
 
@@ -23,7 +22,7 @@ public:
     ScopedIdentifier& operator=(const ScopedIdentifier& other) = default;
     ScopedIdentifier& operator=(ScopedIdentifier&& other) noexcept = default;
 
-    const std::vector<Identifier>& identifiers() const { return idents; }
+    const Array<Identifier>& identifiers() const { return idents; }
 };
 
 

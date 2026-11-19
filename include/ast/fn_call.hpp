@@ -1,10 +1,9 @@
 #ifndef AST_FN_CALL_HPP
 #define AST_FN_CALL_HPP
 
-#include <vector>
-
 #include "ast/scoped_identifier.hpp"
 #include "ast/expression.hpp"
+#include "collections/array.hpp"
 
 
 namespace ast {
@@ -13,11 +12,11 @@ namespace ast {
 class FnCall {
 
     ScopedIdentifier fn;
-    std::vector<Expression> args;
+    Array<Expression> args;
 
 public:
 
-    FnCall(ScopedIdentifier id, std::vector<Expression> args) :
+    FnCall(ScopedIdentifier id, Array<Expression> args) :
         fn { std::move(id) },
         args { std::move(args) } { }
 
@@ -28,7 +27,7 @@ public:
     FnCall& operator=(const FnCall& other) noexcept = default;
 
     const ScopedIdentifier& function() const { return fn; }
-    const std::vector<Expression>& arguments() const { return args; }
+    const Array<Expression>& arguments() const { return args; }
 };
 
 

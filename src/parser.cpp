@@ -2,6 +2,7 @@
 
 #include <format>
 #include <optional>
+#include <string_view>
 #include <vector>
 #include <print>
 
@@ -10,6 +11,7 @@
 #include "ast/function_def.hpp"
 #include "ast/scoped_identifier.hpp"
 #include "ast/variable.hpp"
+#include "collections/string.hpp"
 #include "colors.hpp"
 #include "token.hpp"
 #include "language.hpp"
@@ -117,8 +119,12 @@ void skip_spaces(parser::Context& ctx) {
 
 void expect_newline(parser::Context& ctx, Result& result) {
     if (not is_newline(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', newline expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', newline expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -131,8 +137,12 @@ void expect_newline(parser::Context& ctx, Result& result) {
 
 void expect_open_paren(parser::Context& ctx, Result& result) {
     if (not is_open_paren(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', '(' expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', '(' expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -145,8 +155,12 @@ void expect_open_paren(parser::Context& ctx, Result& result) {
 
 void expect_closed_paren(parser::Context& ctx, Result& result) {
     if (not is_closed_paren(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', ')' expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', ')' expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -159,8 +173,12 @@ void expect_closed_paren(parser::Context& ctx, Result& result) {
 
 void expect_arrow(parser::Context& ctx, Result& result) {
     if (not is_arrow(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', '->' expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', '->' expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -173,8 +191,12 @@ void expect_arrow(parser::Context& ctx, Result& result) {
 
 void expect_assignment(parser::Context& ctx, Result& result) {
     if (not is_assign_operator(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', '=' expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', '=' expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -187,8 +209,12 @@ void expect_assignment(parser::Context& ctx, Result& result) {
 
 void expect_type_separator(parser::Context& ctx, Result& result) {
     if (not is_type_separator(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', ':' expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', '=' expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -213,8 +239,12 @@ std::optional<ast::Identifier> parse_identifier(parser::Context& ctx, Result& re
     skip_spaces(ctx);
 
     if (not is_identifier(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', identifier expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', identifier expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -235,8 +265,12 @@ bool parse_scope_operator(parser::Context& ctx, Result& result) {
     skip_spaces(ctx);
 
     if (not is_scope_access(ctx.token())) {
+
+        std::string msg_str = std::format("Invalid token '{}', '{}' expected", ctx.token().token(), ops::member_access);
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', '{}' expected", ctx.token().token(), ops::member_access),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -256,8 +290,11 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
 
     if (not is_identifier(ctx.token())) {
 
+        std::string msg_str = std::format("Invalid token '{}', identifier expected", ctx.token().token());
+        std::string_view msg = String::create(ctx.allocator, msg_str);
+
         result.add_error(
-            std::format("Invalid token '{}', identifier expected", ctx.token().token()),
+            msg,
             ctx.filename,
             ctx.token().source()
         );
@@ -355,8 +392,11 @@ Result parse_invalid(parser::Context ctx) {
         }
     }
 
+    std::string msg_str = std::format("Unexpected token '{}'", token);
+    std::string_view msg = String::create(ctx.allocator, msg_str);
+
     result.add_error(
-        std::format("Unexpected token '{}'", token),
+        msg,
         ctx.filename,
         ctx.token().source()
     );
@@ -509,8 +549,12 @@ std::vector<ast::Variable> parse_fn_args(parser::Context ctx, Result& result) {
         if (is_closed_paren(ctx.token())) {
             break;
         } else if (has_comma) {
+
+            std::string msg_str = std::format("Invalid token '{}', ',' expected", ctx.token().token());
+            std::string_view msg = String::create(ctx.allocator, msg_str);
+
             result.add_error(
-                std::format("Invalid token '{}', ',' expected", ctx.token().token()),
+                msg,
                 ctx.filename,
                 ctx.token().source()
             );
@@ -544,6 +588,7 @@ Result parse_fn(parser::Context ctx) {
     auto fn_name = parse_identifier(ctx, result);
 
     if (not fn_name.has_value()) {
+
         result.add_error(
             "Expecting function name",
             ctx.filename,
@@ -613,9 +658,10 @@ Result Parser::parse_invalid() {
 
 Context Parser::create_context() {
     return Context {
-        tokenized.file(),
-        current,
-        end(),
+        .allocator = allocator,
+        .filename  = tokenized.file(),
+        .current   = current,
+        .end       = end(),
     };
 }
 
