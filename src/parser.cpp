@@ -8,11 +8,13 @@
 
 #include "allocator.hpp"
 #include "ast/data_type.hpp"
+#include "ast/expression.hpp"
 #include "ast/function_def.hpp"
 #include "ast/identifier.hpp"
 #include "ast/scoped_identifier.hpp"
 #include "ast/statement.hpp"
 #include "ast/variable.hpp"
+#include "ast/body.hpp"
 #include "collections/array.hpp"
 #include "collections/string.hpp"
 #include "colors.hpp"
@@ -26,6 +28,18 @@ namespace {
 
 namespace kwd = language::keywords;
 namespace ops = language::operators;
+
+
+template<Allocatable T>
+Array<T> copy_to_array(const std::vector<T>& vec, Allocator& alloc) {
+    Array<T> array = Array<T>::create(alloc, vec.size());
+
+    for (auto& it : vec) {
+        array.append(it);
+    }
+
+    return array;
+}
 
 
 bool is_space(const Token& token) {
@@ -50,6 +64,14 @@ bool is_open_paren(const Token& token) {
 
 bool is_closed_paren(const Token& token) {
     return token.type() == TokenType::Brace and token.token() == ")";
+}
+
+bool is_body_start(const Token& token) {
+    return token.type() == TokenType::Brace and token.token() == "{";
+}
+
+bool is_body_end(const Token& token) {
+    return token.type() == TokenType::Brace and token.token() == "}";
 }
 
 bool is_arrow(const Token& token) {
@@ -332,11 +354,7 @@ std::optional<ast::ScopedIdentifier> parse_scoped_identifier(parser::Context& ct
         identifiers.emplace_back(std::move(*member));
     }
 
-    auto array = Array<ast::Identifier>::create(ctx.allocator, identifiers.size());
-
-    for (auto& id : identifiers) {
-        array.append(id);
-    }
+    auto array = copy_to_array(identifiers, ctx.allocator);
 
     return ast::ScopedIdentifier { array };
 }
@@ -471,10 +489,49 @@ Result parse_import(parser::Context ctx) {
 }
 
 
+std::optional<ast::Expression> parse_statement(parser::Context& ctx, Result& result) {
+
+    return std::nullopt;
+}
+
+
+std::optional<ast::Expression> parse_body(parser::Context& ctx, Result& result) {
+
+    std::vector<ast::Statement> statements;
+
+    while (true) {
+        skip_empty(ctx);
+
+        if (is_body_end(ctx.token())) {
+            break;
+        }
+
+        auto stmt = parse_statement(ctx, result);
+
+        if (not stmt.has_value()) {
+            return std::nullopt;
+        }
+
+        statements.emplace_back(*stmt);
+    }
+
+    auto statement_arr = copy_to_array(statements, ctx.allocator);
+
+    ast::Body& body = ctx.allocator.create<ast::Body>(statement_arr);
+
+    return ast::Expression { &body };
+}
+
+
 std::optional<ast::Expression> parse_expression(parser::Context& ctx, Result& result) {
 
-    (void)ctx;
-    (void)result;
+    skip_empty(ctx);
+
+    if (is_body_start(ctx.token())) {
+        return parse_body(ctx, result);
+    }
+
+    // TODO: Finish
 
     return std::nullopt;
 }
@@ -630,11 +687,7 @@ Result parse_fn(parser::Context ctx) {
 
     if (fn_name.has_value() and ret_type.has_value() and body.has_value()) {
 
-        auto args_arr = Array<ast::Variable>::create(ctx.allocator, args.size());
-
-        for (auto& arg : args) {
-            args_arr.append(arg);
-        }
+        auto args_arr = copy_to_array(args, ctx.allocator);
 
         result.statement = ast::FunctionDef {
             std::move(*fn_name),
@@ -648,7 +701,7 @@ Result parse_fn(parser::Context ctx) {
 }
 
 
-}
+} // namespace
 
 
 Result Parser::parse_fn() {
@@ -712,17 +765,9 @@ ast::AST Parser::parse() {
         }
     }
 
-    auto statement_arr = Array<ast::Statement>::create(allocator, statements.size());
+    auto statement_arr = copy_to_array(statements, allocator);
+    auto error_arr = copy_to_array(errors, allocator);
 
-    for (auto& st : statements) {
-        statement_arr.append(st);
-    }
-
-    auto error_arr = Array<Error>::create(allocator, errors.size());
-
-    for (auto& err : errors) {
-        error_arr.append(err);
-    }
 
     return ast::AST {
         statement_arr,
